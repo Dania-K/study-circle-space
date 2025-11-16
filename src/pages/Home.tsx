@@ -57,50 +57,48 @@ const Home = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20" />
+      <div className="min-h-screen overflow-hidden relative bg-background">
+        <div className="absolute inset-0 bg-gradient-hero" />
         
-        <div className="relative container mx-auto px-4 py-20">
-          <div className="text-center mb-20 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card mb-8 animate-float">
-              <Rocket className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">The Future of Student Productivity</span>
+        <div className="relative container mx-auto px-4 py-16">
+          <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border mb-6 shadow-soft">
+              <Rocket className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">The Future of Student Productivity</span>
             </div>
             
-            <h1 className="text-6xl md:text-8xl font-bold mb-8 gradient-text text-shadow">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-foreground">
               StudiCircle
             </h1>
-            <p className="text-2xl md:text-3xl text-muted-foreground mb-6 max-w-3xl mx-auto font-light">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto font-light leading-relaxed">
               Transform your study habits with AI-powered focus rooms, 
-              <span className="gradient-text font-semibold"> gamified learning</span>, 
+              <span className="text-primary font-semibold"> gamified learning</span>, 
               and a supportive community
             </p>
             <Link to="/auth">
               <Button 
                 size="lg" 
-                className="bg-gradient-primary text-lg px-12 py-8 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-500 text-white font-semibold animate-glow"
+                className="text-base px-10 py-6 rounded-full shadow-elegant hover:shadow-hover hover:scale-105 transition-all duration-300"
               >
                 Get Started Free
-                <Sparkles className="ml-3 w-6 h-6" />
+                <Sparkles className="ml-2 w-5 h-5" />
               </Button>
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
             {[
-              { icon: Users, title: "Smart Focus Rooms", desc: "Join synchronized Pomodoro sessions with AI-powered task breakdowns", gradient: "from-purple-500/20 to-pink-500/20" },
-              { icon: Target, title: "AI Study Plans", desc: "Let AI create personalized study plans tailored to your deadlines", gradient: "from-pink-500/20 to-orange-500/20" },
-              { icon: TrendingUp, title: "Level Up & Earn", desc: "Gain XP, unlock badges, and watch your study avatar evolve", gradient: "from-cyan-500/20 to-blue-500/20" }
+              { icon: Users, title: "Smart Focus Rooms", desc: "Join synchronized Pomodoro sessions with AI-powered task breakdowns", color: "text-primary" },
+              { icon: Target, title: "AI Study Plans", desc: "Let AI create personalized study plans tailored to your deadlines", color: "text-accent" },
+              { icon: TrendingUp, title: "Level Up & Earn", desc: "Gain XP, unlock badges, and watch your study avatar evolve", color: "text-primary" }
             ].map((feature, idx) => (
               <Card 
                 key={idx}
-                className="glass-card p-8 hover-lift group animate-in fade-in slide-in-from-bottom-10 duration-700"
-                style={{ animationDelay: `${idx * 150}ms` }}
+                className="p-8 hover-lift shadow-card border-border/50 bg-card/80 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-700"
+                style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <div className={`w-16 h-16 rounded-3xl bg-gradient-to-br ${feature.gradient} backdrop-blur-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500`}>
-                  <feature.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">{feature.title}</h3>
+                <feature.icon className={`w-10 h-10 mb-4 ${feature.color}`} />
+                <h3 className="text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
               </Card>
             ))}

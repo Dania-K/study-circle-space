@@ -1,20 +1,120 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Users, Brain, Trophy, Sparkles } from "lucide-react";
+import { Users, Brain, Trophy, Sparkles, Clock, Zap, BookOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const [liveRooms, setLiveRooms] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    if (!loading && user) {
-      navigate("/rooms");
+    if (user) {
+      loadUserData();
+      loadLiveRooms();
     }
-  }, [user, loading, navigate]);
+  }, [user]);
 
+  const loadUserData = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user!.id)
+      .single();
+    setProfile(data);
+  };
+
+  const loadLiveRooms = async () => {
+    const { data } = await supabase
+      .from('focus_rooms')
+      .select('*')
+      .eq('in_session', true)
+      .limit(3);
+    setLiveRooms(data || []);
+  };
+
+  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+
+  // Logged in user view
+  if (user && profile) {
+    return (
+      <div className="min-h-screen p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 mb-8">
+            <h1 className="text-4xl font-bold">Hey {profile.name || 'Student'}! 👋</h1>
+          </div>
+
+          {/* Live Rooms Preview */}
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Zap className="w-6 h-6" /> Live Focus Rooms – Open Now
+            </h2>
+            {liveRooms.length > 0 ? (
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                {liveRooms.map(room => (
+                  <Card key={room.id} className="p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/rooms')}>
+                    <h3 className="font-semibold">{room.title}</h3>
+                    <p className="text-sm text-muted-foreground">{room.subject}</p>
+                    <div className="flex items-center gap-2 mt-2 text-sm">
+                      <Clock className="w-4 h-4" />
+                      <span>{room.duration_minutes || 25} min</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground mb-4">No active rooms right now. Be the first to start one!</p>
+            )}
+            <Button onClick={() => navigate('/rooms')} className="w-full">Browse All Rooms</Button>
+          </Card>
+
+          {/* Quick Actions */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/rooms')}>
+              <Users className="w-10 h-10 mb-3 text-primary" />
+              <h3 className="font-semibold text-lg mb-2">Start Focus Room</h3>
+              <p className="text-sm text-muted-foreground">Join or create a study session</p>
+            </Card>
+            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/tasks')}>
+              <BookOpen className="w-10 h-10 mb-3 text-primary" />
+              <h3 className="font-semibold text-lg mb-2">Your Tasks</h3>
+              <p className="text-sm text-muted-foreground">Manage your study plans</p>
+            </Card>
+            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/social')}>
+              <Trophy className="w-10 h-10 mb-3 text-primary" />
+              <h3 className="font-semibold text-lg mb-2">Social Rooms</h3>
+              <p className="text-sm text-muted-foreground">Connect with study groups</p>
+            </Card>
+          </div>
+
+          {/* Stats Preview */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Your Progress 🎯</h2>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-3xl font-bold text-primary">{profile.xp}</div>
+                <div className="text-sm text-muted-foreground">XP</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-primary">{profile.level}</div>
+                <div className="text-sm text-muted-foreground">Level</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-primary">{profile.streak}</div>
+                <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Landing page for non-logged in users
   return (
     <div className="space-y-12 animate-slide-up">
       {/* Hero Section */}

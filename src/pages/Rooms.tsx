@@ -96,7 +96,13 @@ const Rooms = () => {
 
   const completeSubtask = async (index: number) => {
     const newSubtasks = [...subtasks];
-    newSubtasks[index] = { ...newSubtasks[index], completed: true };
+    // Handle both string and object subtasks
+    const currentSubtask = newSubtasks[index];
+    if (typeof currentSubtask === 'string') {
+      newSubtasks[index] = { text: currentSubtask, completed: true };
+    } else {
+      newSubtasks[index] = { ...currentSubtask, completed: true };
+    }
     setSubtasks(newSubtasks);
 
     // Award XP
@@ -152,19 +158,24 @@ const Rooms = () => {
 
           <div className="space-y-3">
             <h3 className="font-semibold text-lg mb-3">Your Tasks:</h3>
-            {subtasks.map((subtask, index) => (
-              <Card key={index} className={`p-4 flex items-center gap-3 ${subtask.completed ? 'opacity-50' : ''}`}>
-                <button
-                  onClick={() => !subtask.completed && completeSubtask(index)}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    subtask.completed ? 'bg-primary border-primary' : 'border-muted-foreground'
-                  }`}
-                >
-                  {subtask.completed && <Check className="w-4 h-4 text-primary-foreground" />}
-                </button>
-                <span className={subtask.completed ? 'line-through' : ''}>{subtask}</span>
-              </Card>
-            ))}
+            {subtasks.map((subtask, index) => {
+              const isCompleted = typeof subtask === 'object' && subtask.completed;
+              const taskText = typeof subtask === 'string' ? subtask : subtask.text || '';
+              
+              return (
+                <Card key={index} className={`p-4 flex items-center gap-3 ${isCompleted ? 'opacity-50' : ''}`}>
+                  <button
+                    onClick={() => !isCompleted && completeSubtask(index)}
+                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      isCompleted ? 'bg-primary border-primary' : 'border-muted-foreground'
+                    }`}
+                  >
+                    {isCompleted && <Check className="w-4 h-4 text-primary-foreground" />}
+                  </button>
+                  <span className={isCompleted ? 'line-through' : ''}>{taskText}</span>
+                </Card>
+              );
+            })}
           </div>
 
           <Button

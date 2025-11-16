@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { NavLink } from "./NavLink";
-import { Home, Users, ListTodo, LayoutDashboard } from "lucide-react";
+import { Home, Users, ListTodo, LayoutDashboard, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -35,7 +35,15 @@ export const Layout = () => {
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
                 <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Rooms</span>
+                <span className="hidden sm:inline">Focus Rooms</span>
+              </NavLink>
+              <NavLink
+                to="/social"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                activeClassName="bg-primary/10 text-primary font-medium"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">Social</span>
               </NavLink>
               <NavLink
                 to="/tasks"

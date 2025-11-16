@@ -38,12 +38,12 @@ export const Layout = () => {
                 <span className="hidden sm:inline">Focus Rooms</span>
               </NavLink>
               <NavLink
-                to="/social"
+                to="/community"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">Convo Rooms</span>
+                <span className="hidden sm:inline">Community</span>
               </NavLink>
               <NavLink
                 to="/tasks"

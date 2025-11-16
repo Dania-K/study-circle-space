@@ -8,7 +8,8 @@ import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
-import SocialRooms from "./pages/SocialRooms";
+import ConvoRooms from "./pages/ConvoRooms";
+import HomeworkAgent from "./pages/HomeworkAgent";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -25,7 +26,8 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
-            <Route path="/social" element={<SocialRooms />} />
+            <Route path="/social" element={<ConvoRooms />} />
+            <Route path="/homework" element={<HomeworkAgent />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />

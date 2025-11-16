@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { taskText, mood, duration } = await req.json();
+    const { question } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
@@ -29,11 +29,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a helpful study assistant. Break down student tasks into ${Math.max(3, Math.floor(duration / 10))} small, logical, actionable subtasks that can be completed in a ${duration} minute focus session. Each subtask should be specific and measurable. Return ONLY a valid JSON array of subtask strings, nothing else.`,
+            content: 'You are a helpful homework assistant for students. Provide clear, educational explanations. Break down complex concepts into understandable steps. Encourage learning rather than just giving answers. Be supportive and encouraging.',
           },
           {
             role: 'user',
-            content: `Student mood: ${mood}\nTask: ${taskText}\n\nBreak this down into manageable subtasks:`,
+            content: question,
           },
         ],
       }),
@@ -42,23 +42,14 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('AI API error:', error);
-      throw new Error('Failed to generate subtasks');
+      throw new Error('Failed to get homework help');
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    // Parse the JSON array from the response
-    let subtasks: string[];
-    try {
-      subtasks = JSON.parse(content);
-    } catch {
-      // If parsing fails, split by lines as fallback
-      subtasks = content.split('\n').filter((s: string) => s.trim());
-    }
+    const answer = data.choices[0].message.content;
 
     return new Response(
-      JSON.stringify({ subtasks }),
+      JSON.stringify({ answer }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

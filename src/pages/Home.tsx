@@ -1,30 +1,28 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import { Users, Brain, Trophy, Sparkles, Clock, Zap, BookOpen } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Zap, Users, Target, TrendingUp, Sparkles, Clock, BookOpen } from "lucide-react";
 
 const Home = () => {
-  const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const [liveRooms, setLiveRooms] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
+  const [liveRooms, setLiveRooms] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({});
 
   useEffect(() => {
     if (user) {
-      loadUserData();
+      loadProfile();
       loadLiveRooms();
+      loadStats();
     }
   }, [user]);
 
-  const loadUserData = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user!.id)
-      .single();
+  const loadProfile = async () => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', user!.id).single();
     setProfile(data);
   };
 
@@ -37,173 +35,191 @@ const Home = () => {
     setLiveRooms(data || []);
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  const loadStats = async () => {
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user!.id)
+      .eq('completed', true);
+    
+    const { data: sessions } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('user_id', user!.id);
 
-  // Logged in user view
-  if (user && profile) {
+    setStats({
+      tasksCompleted: tasks?.length || 0,
+      sessionsJoined: sessions?.length || 0,
+    });
+  };
+
+  if (loading) return null;
+
+  if (!user) {
     return (
-      <div className="min-h-screen p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex items-center gap-3 mb-8">
-            <h1 className="text-4xl font-bold">Hey {profile.name || 'Student'}! 👋</h1>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+              Welcome to StudiCircle
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Transform your study habits with AI-powered focus rooms, gamified learning, and a supportive community
+            </p>
+            <Link to="/auth">
+              <Button size="lg" className="bg-gradient-primary text-lg px-8 py-6 hover:shadow-hover transition-all hover:scale-105">
+                Get Started <Sparkles className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
           </div>
 
-          {/* Live Rooms Preview */}
-          <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Zap className="w-6 h-6" /> Live Focus Rooms – Open Now
-            </h2>
-            {liveRooms.length > 0 ? (
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
-                {liveRooms.map(room => (
-                  <Card key={room.id} className="p-4 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/rooms')}>
-                    <h3 className="font-semibold">{room.title}</h3>
-                    <p className="text-sm text-muted-foreground">{room.subject}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
-                      <Clock className="w-4 h-4" />
-                      <span>{room.duration_minutes || 25} min</span>
-                    </div>
-                  </Card>
-                ))}
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <Card className="p-6 shadow-card hover:shadow-hover transition-all">
+              <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-white" />
               </div>
-            ) : (
-              <p className="text-muted-foreground mb-4">No active rooms right now. Be the first to start one!</p>
-            )}
-            <Button onClick={() => navigate('/rooms')} className="w-full">Browse All Rooms</Button>
-          </Card>
-
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/rooms')}>
-              <Users className="w-10 h-10 mb-3 text-primary" />
-              <h3 className="font-semibold text-lg mb-2">Start Focus Room</h3>
-              <p className="text-sm text-muted-foreground">Join or create a study session</p>
+              <h3 className="text-xl font-bold mb-2">Focus Rooms</h3>
+              <p className="text-muted-foreground">Join synchronized Pomodoro sessions with AI-powered task breakdowns</p>
             </Card>
-            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/tasks')}>
-              <BookOpen className="w-10 h-10 mb-3 text-primary" />
-              <h3 className="font-semibold text-lg mb-2">Your Tasks</h3>
-              <p className="text-sm text-muted-foreground">Manage your study plans</p>
+            
+            <Card className="p-6 shadow-card hover:shadow-hover transition-all">
+              <div className="w-12 h-12 rounded-xl bg-gradient-secondary flex items-center justify-center mb-4">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Smart Tasks</h3>
+              <p className="text-muted-foreground">Let AI create personalized study plans tailored to your deadlines</p>
             </Card>
-            <Card className="p-6 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/social')}>
-              <Trophy className="w-10 h-10 mb-3 text-primary" />
-              <h3 className="font-semibold text-lg mb-2">Social Rooms</h3>
-              <p className="text-sm text-muted-foreground">Connect with study groups</p>
+            
+            <Card className="p-6 shadow-card hover:shadow-hover transition-all">
+              <div className="w-12 h-12 rounded-xl bg-gradient-accent flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Level Up</h3>
+              <p className="text-muted-foreground">Earn XP, unlock badges, and watch your study avatar evolve</p>
             </Card>
           </div>
-
-          {/* Stats Preview */}
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Your Progress 🎯</h2>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-3xl font-bold text-primary">{profile.xp}</div>
-                <div className="text-sm text-muted-foreground">XP</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">{profile.level}</div>
-                <div className="text-sm text-muted-foreground">Level</div>
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-primary">{profile.streak}</div>
-                <div className="text-sm text-muted-foreground">Day Streak 🔥</div>
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
     );
   }
 
-  // Landing page for non-logged in users
+  const AVATAR_STAGES = ["🥚", "🐣", "🐥", "🐦", "🦅"];
+  const avatarStage = Math.min(Math.floor((profile?.total_lifetime_xp || 0) / 100), 4);
+  const name = profile?.name || profile?.username || "Student";
+
   return (
-    <div className="space-y-12 animate-slide-up">
-      {/* Hero Section */}
-      <div className="text-center space-y-6 py-12">
-        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
-          <Sparkles className="w-4 h-4" />
-          Student Productivity Reimagined
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-2xl p-8 shadow-card">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="text-6xl">{AVATAR_STAGES[avatarStage]}</div>
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Welcome back, {name}! 👋</h1>
+            <p className="text-muted-foreground">Ready to level up your learning?</p>
+          </div>
         </div>
-        <h1 className="text-5xl sm:text-6xl font-bold text-foreground">
-          Welcome to{" "}
-          <span className="bg-gradient-primary bg-clip-text text-transparent">
-            StudiCircle
-          </span>
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Focus better, achieve more, and level up your study game with AI-powered
-          productivity tools designed for students.
-        </p>
-        <div className="flex gap-4 justify-center pt-4">
-          <Button 
-            size="lg" 
-            className="bg-gradient-primary hover:shadow-hover transition-all"
-            onClick={() => navigate("/auth")}
-          >
-            Get Started
-          </Button>
-          <Button 
-            size="lg" 
-            variant="outline"
-            onClick={() => navigate("/auth")}
-          >
-            Sign In
-          </Button>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-4 bg-card/50 backdrop-blur">
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <Zap className="w-4 h-4" />
+              <span className="text-xs font-medium">Level</span>
+            </div>
+            <p className="text-2xl font-bold">{profile?.level || 1}</p>
+          </Card>
+          
+          <Card className="p-4 bg-card/50 backdrop-blur">
+            <div className="flex items-center gap-2 text-secondary mb-1">
+              <Target className="w-4 h-4" />
+              <span className="text-xs font-medium">XP</span>
+            </div>
+            <p className="text-2xl font-bold">{profile?.total_lifetime_xp || 0}</p>
+          </Card>
+          
+          <Card className="p-4 bg-card/50 backdrop-blur">
+            <div className="flex items-center gap-2 text-accent mb-1">
+              <BookOpen className="w-4 h-4" />
+              <span className="text-xs font-medium">Tasks Done</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.tasksCompleted}</p>
+          </Card>
+          
+          <Card className="p-4 bg-card/50 backdrop-blur">
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <Users className="w-4 h-4" />
+              <span className="text-xs font-medium">Sessions</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.sessionsJoined}</p>
+          </Card>
         </div>
       </div>
 
-      {/* Features Grid */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-primary/20">
-          <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-            <Users className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <h3 className="text-xl font-semibold">Focus Rooms</h3>
-          <p className="text-muted-foreground">
-            Join virtual study spaces with shared Pomodoro timers and connect with
-            students working on similar subjects.
-          </p>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="p-6 shadow-card">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Live Focus Rooms
+          </h2>
+          {liveRooms.length > 0 ? (
+            <div className="space-y-3">
+              {liveRooms.map(room => (
+                <Link key={room.id} to="/rooms">
+                  <Card className="p-4 hover:bg-muted/50 transition-all cursor-pointer">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold">{room.title}</h3>
+                      <Badge variant="default" className="bg-green-500">Live</Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {room.duration_minutes}m
+                      </span>
+                      <Badge variant="secondary">{room.subject}</Badge>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No active rooms right now</p>
+          )}
+          <Link to="/rooms">
+            <Button className="w-full mt-4 bg-gradient-primary">Browse All Rooms</Button>
+          </Link>
         </Card>
 
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-secondary/20">
-          <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
-            <Brain className="w-6 h-6 text-secondary-foreground" />
+        <Card className="p-6 shadow-card">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-secondary" />
+            Quick Actions
+          </h2>
+          <div className="space-y-3">
+            <Link to="/rooms">
+              <Button variant="outline" className="w-full justify-start text-left">
+                <Users className="w-4 h-4 mr-2" />
+                Join a Focus Room
+              </Button>
+            </Link>
+            <Link to="/tasks">
+              <Button variant="outline" className="w-full justify-start text-left">
+                <Target className="w-4 h-4 mr-2" />
+                Create Study Plan
+              </Button>
+            </Link>
+            <Link to="/homework">
+              <Button variant="outline" className="w-full justify-start text-left">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Ask AI for Help
+              </Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button variant="outline" className="w-full justify-start text-left">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                View Dashboard
+              </Button>
+            </Link>
           </div>
-          <h3 className="text-xl font-semibold">AI Study Plans</h3>
-          <p className="text-muted-foreground">
-            Get personalized study schedules and smart task breakdowns powered by
-            AI to help you stay organized.
-          </p>
-        </Card>
-
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-accent/20">
-          <div className="w-12 h-12 bg-gradient-accent rounded-xl flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-accent-foreground" />
-          </div>
-          <h3 className="text-xl font-semibold">Gamification</h3>
-          <p className="text-muted-foreground">
-            Earn XP, maintain streaks, collect badges, and raise your virtual pet
-            as you complete tasks and focus sessions.
-          </p>
         </Card>
       </div>
-
-      {/* Stats Preview */}
-      <Card className="p-8 bg-gradient-to-br from-primary/5 to-accent/5 border-0">
-        <div className="grid sm:grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-4xl font-bold text-primary mb-2">1,234</div>
-            <div className="text-muted-foreground">Active Students</div>
-          </div>
-          <div>
-            <div className="text-4xl font-bold text-secondary mb-2">5,678</div>
-            <div className="text-muted-foreground">Study Sessions</div>
-          </div>
-          <div>
-            <div className="text-4xl font-bold text-accent mb-2">9,012</div>
-            <div className="text-muted-foreground">Tasks Completed</div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };

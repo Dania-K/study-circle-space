@@ -7,11 +7,23 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Clock } from "lucide-react";
+import { Users, MessageCircle, Sparkles } from "lucide-react";
+import { ConvoRoomChat } from "@/components/ConvoRoomChat";
 
 const INTEREST_OPTIONS = ["Math", "Science", "Literature", "History", "Art", "Music", "Sports", "Gaming", "Coding", "Languages"];
 
-const SocialRooms = () => {
+const TALKING_PROMPTS = [
+  "What's one study habit that really works for you?",
+  "What subject are you most excited about right now?",
+  "Share your biggest academic goal this semester",
+  "What motivates you to study?",
+  "What's the hardest thing you're working on?",
+  "How do you stay focused during long study sessions?",
+  "What's your dream career or field?",
+  "Share a recent achievement you're proud of!",
+];
+
+const ConvoRooms = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -22,6 +34,8 @@ const SocialRooms = () => {
   const [classes, setClasses] = useState("");
   const [rooms, setRooms] = useState<any[]>([]);
   const [userInterests, setUserInterests] = useState<any>(null);
+  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [currentPrompt, setCurrentPrompt] = useState("");
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -33,6 +47,13 @@ const SocialRooms = () => {
       loadRooms();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (selectedRoom) {
+      const randomPrompt = TALKING_PROMPTS[Math.floor(Math.random() * TALKING_PROMPTS.length)];
+      setCurrentPrompt(randomPrompt);
+    }
+  }, [selectedRoom]);
 
   const loadUserInterests = async () => {
     const { data } = await supabase
@@ -63,7 +84,7 @@ const SocialRooms = () => {
     });
 
     if (!error) {
-      toast({ title: "Profile saved!" });
+      toast({ title: "Profile saved! Finding your rooms..." });
       setShowQuiz(false);
       loadUserInterests();
     }
@@ -79,14 +100,14 @@ const SocialRooms = () => {
 
   const createRoom = async (category: string) => {
     const { error } = await supabase.from('social_rooms').insert({
-      name: `${category} Study Group`,
+      name: `${category} Study Circle`,
       category,
       host_id: user!.id,
-      description: `Connect with others interested in ${category}`,
+      description: `Connect and chat with others interested in ${category}`,
     });
 
     if (!error) {
-      toast({ title: "Room created!" });
+      toast({ title: "Convo room created!" });
       loadRooms();
     }
   };
@@ -95,9 +116,12 @@ const SocialRooms = () => {
 
   if (showQuiz) {
     return (
-      <div className="min-h-screen p-6">
-        <Card className="max-w-2xl mx-auto p-8">
-          <h1 className="text-3xl font-bold mb-6">Tell us about yourself! 🎯</h1>
+      <div className="min-h-screen p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <Card className="max-w-2xl mx-auto p-8 shadow-card">
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+            Tell us about yourself! <Sparkles className="w-7 h-7 text-primary" />
+          </h1>
+          <p className="text-muted-foreground mb-6">Help us match you with the right study circles</p>
           
           <div className="space-y-6">
             <div>
@@ -107,7 +131,7 @@ const SocialRooms = () => {
                   <Badge
                     key={interest}
                     variant={selectedInterests.includes(interest) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer px-4 py-2 text-sm transition-all hover:scale-105"
                     onClick={() => toggleInterest(interest)}
                   >
                     {interest}
@@ -131,8 +155,8 @@ const SocialRooms = () => {
               <Input value={classes} onChange={e => setClasses(e.target.value)} placeholder="Math 101, Biology, History..." />
             </div>
 
-            <Button className="w-full" onClick={submitQuiz} disabled={selectedInterests.length === 0}>
-              Find My Study Groups
+            <Button className="w-full bg-gradient-primary" onClick={submitQuiz} disabled={selectedInterests.length === 0}>
+              Find My Study Circles
             </Button>
           </div>
         </Card>
@@ -140,20 +164,58 @@ const SocialRooms = () => {
     );
   }
 
+  if (selectedRoom) {
+    return (
+      <div className="min-h-screen p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button variant="outline" onClick={() => setSelectedRoom(null)}>
+            ← Back to Rooms
+          </Button>
+
+          <Card className="p-6 shadow-card">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  {selectedRoom.name}
+                  <MessageCircle className="w-6 h-6 text-primary" />
+                </h2>
+                <Badge variant="secondary" className="mt-2">{selectedRoom.category}</Badge>
+              </div>
+            </div>
+
+            <Card className="p-4 mb-6 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+              <p className="font-semibold text-sm mb-1 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" /> Today's talking prompt:
+              </p>
+              <p className="text-foreground">{currentPrompt}</p>
+            </Card>
+
+            <ConvoRoomChat roomId={selectedRoom.id} />
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Social Rooms 💬</h1>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              Convo Rooms <MessageCircle className="w-8 h-8 text-primary" />
+            </h1>
+            <p className="text-muted-foreground">Connect and chat with fellow students</p>
+          </div>
           <Button variant="outline" onClick={() => setShowQuiz(true)}>Edit Profile</Button>
         </div>
 
         {userInterests && (
-          <Card className="p-6">
+          <Card className="p-6 shadow-card">
             <h2 className="text-xl font-semibold mb-3">Your Interests</h2>
             <div className="flex flex-wrap gap-2">
               {userInterests.interests?.map((interest: string) => (
-                <Badge key={interest}>{interest}</Badge>
+                <Badge key={interest} className="px-3 py-1">{interest}</Badge>
               ))}
             </div>
           </Card>
@@ -161,32 +223,27 @@ const SocialRooms = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rooms.map(room => (
-            <Card key={room.id} className="p-6">
+            <Card 
+              key={room.id} 
+              className="p-6 cursor-pointer hover:shadow-hover transition-all hover:scale-[1.02]"
+              onClick={() => setSelectedRoom(room)}
+            >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-lg">{room.name}</h3>
                 <Badge variant="secondary">{room.category}</Badge>
               </div>
               <p className="text-sm text-muted-foreground mb-4">{room.description}</p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  <span>Active</span>
-                </div>
-                {room.duration_minutes && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{room.duration_minutes} min</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Active conversations</span>
               </div>
-              <Button className="w-full">Join Room</Button>
             </Card>
           ))}
         </div>
 
         {userInterests?.interests?.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Create a Room</h2>
+          <Card className="p-6 shadow-card">
+            <h2 className="text-xl font-semibold mb-4">Create a Convo Room</h2>
             <div className="flex flex-wrap gap-2">
               {userInterests.interests.map((interest: string) => (
                 <Button key={interest} variant="outline" onClick={() => createRoom(interest)}>
@@ -201,4 +258,4 @@ const SocialRooms = () => {
   );
 };
 
-export default SocialRooms;
+export default ConvoRooms;

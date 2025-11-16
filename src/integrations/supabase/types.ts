@@ -41,6 +41,69 @@ export type Database = {
         }
         Relationships: []
       }
+      community_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      community_posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_spotlight: boolean
+          likes: number
+          title: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          is_spotlight?: boolean
+          likes?: number
+          title: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_spotlight?: boolean
+          likes?: number
+          title?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       focus_rooms: {
         Row: {
           created_at: string

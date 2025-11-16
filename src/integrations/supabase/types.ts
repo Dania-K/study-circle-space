@@ -14,9 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          xp_requirement: number
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          name: string
+          xp_requirement: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          xp_requirement?: number
+        }
+        Relationships: []
+      }
       focus_rooms: {
         Row: {
           created_at: string
+          description: string | null
+          duration_minutes: number | null
+          host_id: string | null
           id: string
           in_session: boolean | null
           subject: string
@@ -25,6 +55,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          host_id?: string | null
           id?: string
           in_session?: boolean | null
           subject: string
@@ -33,13 +66,24 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          host_id?: string | null
           id?: string
           in_session?: boolean | null
           subject?: string
           timer_end_timestamp?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "focus_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -120,30 +164,39 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_stage: number | null
           created_at: string
           id: string
           last_activity: string | null
           level: number
           name: string | null
           streak: number
+          total_lifetime_xp: number | null
+          username: string | null
           xp: number
         }
         Insert: {
+          avatar_stage?: number | null
           created_at?: string
           id: string
           last_activity?: string | null
           level?: number
           name?: string | null
           streak?: number
+          total_lifetime_xp?: number | null
+          username?: string | null
           xp?: number
         }
         Update: {
+          avatar_stage?: number | null
           created_at?: string
           id?: string
           last_activity?: string | null
           level?: number
           name?: string | null
           streak?: number
+          total_lifetime_xp?: number | null
+          username?: string | null
           xp?: number
         }
         Relationships: []
@@ -205,6 +258,47 @@ export type Database = {
           },
         ]
       }
+      social_rooms: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          host_id: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          host_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          host_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           completed: boolean | null
@@ -239,6 +333,124 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_id: string | null
+          claimed: boolean | null
+          earned_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          claimed?: boolean | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          claimed?: boolean | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_interests: {
+        Row: {
+          classes: string[] | null
+          created_at: string | null
+          goals: string[] | null
+          hobbies: string[] | null
+          id: string
+          interests: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          classes?: string[] | null
+          created_at?: string | null
+          goals?: string[] | null
+          hobbies?: string[] | null
+          id?: string
+          interests?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          classes?: string[] | null
+          created_at?: string | null
+          goals?: string[] | null
+          hobbies?: string[] | null
+          id?: string
+          interests?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_summaries: {
+        Row: {
+          created_at: string | null
+          focus_minutes: number | null
+          id: string
+          summary_text: string
+          tasks_completed: number | null
+          user_id: string | null
+          week_start: string
+          xp_gained: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          focus_minutes?: number | null
+          id?: string
+          summary_text: string
+          tasks_completed?: number | null
+          user_id?: string | null
+          week_start: string
+          xp_gained?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          focus_minutes?: number | null
+          id?: string
+          summary_text?: string
+          tasks_completed?: number | null
+          user_id?: string | null
+          week_start?: string
+          xp_gained?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_summaries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

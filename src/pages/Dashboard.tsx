@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Zap, Trophy, Flame, Target, TrendingUp, Sparkles } from "lucide-react";
+import { Zap, Trophy, Flame, Target, TrendingUp, Sparkles, Clock, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -103,79 +103,109 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-2 flex items-center justify-center gap-2">
-          Welcome back, {name}! <Sparkles className="w-8 h-8 text-primary" />
+        <h1 className="text-3xl font-bold mb-2 text-foreground">
+          Welcome back, {name}!
         </h1>
         <p className="text-muted-foreground">Here's your learning journey</p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 text-center shadow-card hover:shadow-hover transition-all">
-          <div className="text-8xl mb-4 animate-bounce">{AVATAR_STAGES[avatarStage]}</div>
-          <h2 className="text-2xl font-bold mb-2">{name}</h2>
-          <Badge className="mb-4 bg-gradient-primary">Level {profile.level}</Badge>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>XP: {profile.total_lifetime_xp || 0}</span>
-              <span>{xpToNextLevel} to next level</span>
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <Card className="p-8 shadow-card border-border/50">
+          <div className="text-center">
+            <div className="text-7xl mb-4">{AVATAR_STAGES[avatarStage]}</div>
+            <h2 className="text-2xl font-bold mb-1 text-foreground">Level {profile.level}</h2>
+            <p className="text-sm text-muted-foreground mb-4">{profile.total_lifetime_xp} Total XP</p>
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              <svg className="w-full h-full" viewBox="0 0 36 36">
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="hsl(var(--muted))"
+                  strokeWidth="3"
+                />
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="3"
+                  strokeDasharray={`${(profile.xp / (profile.level * 100)) * 100}, 100`}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold text-primary">{profile.xp}</span>
+              </div>
             </div>
-            <Progress value={((profile.total_lifetime_xp || 0) % 100)} className="h-3" />
+            <p className="text-xs text-muted-foreground">{xpToNextLevel} XP to next level</p>
           </div>
         </Card>
 
-        <Card className="p-6 shadow-card">
-          <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" /> Your Stats
+        <Card className="p-8 shadow-card border-border/50">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
+            <Sparkles className="w-5 h-5 text-accent" />
+            Weekly Summary
           </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Tasks Completed</span>
-              <Badge variant="secondary" className="text-lg px-3 py-1">{stats.tasksCompleted}</Badge>
+          {weeklySummary ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">{weeklySummary.summary_text}</p>
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span>+{weeklySummary.xp_gained} XP</span>
+                <span>{weeklySummary.focus_minutes} min</span>
+                <span>{weeklySummary.tasks_completed} tasks</span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Focus Minutes</span>
-              <Badge variant="secondary" className="text-lg px-3 py-1">{stats.focusMinutes}</Badge>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground mb-4">No summary yet this week</p>
+              <Button onClick={generateWeeklySummary} variant="outline" size="sm">
+                Generate Summary
+              </Button>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Rooms Joined</span>
-              <Badge variant="secondary" className="text-lg px-3 py-1">{stats.roomsJoined}</Badge>
-            </div>
-            <div className="flex justify-between items-center pt-2 border-t">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Flame className="w-5 h-5 text-orange-500" /> Streak
-              </span>
-              <Badge className="text-lg px-3 py-1 bg-gradient-secondary">{profile.streak} days</Badge>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 shadow-card">
-          <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-accent" /> Badges
-          </h3>
-          {unclaimedBadges.length > 0 && (
-            <Badge variant="default" className="mb-3 bg-gradient-primary">
-              🎉 {unclaimedBadges.length} New!
-            </Badge>
           )}
-          <div className="grid grid-cols-3 gap-3">
-            {badges.slice(0, 6).map(badge => {
-              const earned = earnedBadges.find(b => b.badges?.id === badge.id);
-              return (
-                <div
-                  key={badge.id}
-                  className={`text-center p-3 rounded-xl transition-all ${
-                    earned ? 'bg-gradient-to-br from-primary/20 to-accent/20 scale-105' : 'opacity-30'
-                  }`}
-                >
-                  <div className="text-4xl mb-1">{badge.icon}</div>
-                  <div className="text-xs font-medium">{badge.name}</div>
-                </div>
-              );
-            })}
-          </div>
         </Card>
       </div>
+
+      <div className="grid md:grid-cols-4 gap-4 mb-8">
+        {[
+          { icon: Target, label: "Tasks Done", value: stats.tasksCompleted, color: "text-primary" },
+          { icon: Clock, label: "Focus Minutes", value: stats.focusMinutes, color: "text-accent" },
+          { icon: Users, label: "Rooms Joined", value: stats.roomsJoined, color: "text-primary" },
+          { icon: Flame, label: "Day Streak", value: profile.streak, color: "text-accent" },
+        ].map((stat, idx) => (
+          <Card key={idx} className="p-6 shadow-card border-border/50 hover-lift">
+            <stat.icon className={`w-6 h-6 mb-2 ${stat.color}`} />
+            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+            <p className="text-sm text-muted-foreground">{stat.label}</p>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6 shadow-card mb-8 border-border/50">
+        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-foreground">
+          <Trophy className="w-5 h-5 text-accent" /> Badges
+        </h3>
+        {unclaimedBadges.length > 0 && (
+          <Badge variant="default" className="mb-3">
+            🎉 {unclaimedBadges.length} New!
+          </Badge>
+        )}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {badges.slice(0, 6).map(badge => {
+            const earned = earnedBadges.find(b => b.badges?.id === badge.id);
+            return (
+              <div
+                key={badge.id}
+                className={`text-center p-3 rounded-xl transition-all ${
+                  earned ? 'bg-primary/10 scale-105 border-2 border-primary/20' : 'opacity-30'
+                }`}
+              >
+                <div className="text-4xl mb-1">{badge.icon}</div>
+                <div className="text-xs font-medium">{badge.name}</div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="p-6 shadow-card">

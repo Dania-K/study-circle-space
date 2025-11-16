@@ -29,7 +29,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a helpful study assistant. Break down student tasks into ${Math.max(3, Math.floor(duration / 10))} small, logical, actionable subtasks that can be completed in a ${duration} minute focus session. Each subtask should be specific and measurable. Return ONLY a valid JSON array of subtask strings, nothing else.`,
+            content: `You are a study assistant. Break down the student's task into 2-5 clear, actionable subtasks that fit a ${duration} minute focus session considering their mood (${mood}). Return ONLY a numbered list of plain text subtasks, one per line. Do NOT include code blocks, JSON syntax, or any markup. Just simple, clear action items.`,
           },
           {
             role: 'user',
@@ -48,17 +48,57 @@ serve(async (req) => {
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    // Parse the JSON array from the response
-    let subtasks: string[];
+    // Clean and parse subtasks, removing code artifacts
+    let subtasks: string[] = [];
+    
     try {
-      subtasks = JSON.parse(content);
+      // Try to parse as JSON first
+      const parsed = JSON.parse(content);
+      subtasks = Array.isArray(parsed) ? parsed : [content];
     } catch {
-      // If parsing fails, split by lines as fallback
-      subtasks = content.split('\n').filter((s: string) => s.trim());
+      // Fallback: split by lines
+      subtasks = content.split('\n');
+    }
+    
+    // Clean each subtask
+    const cleanSubtasks = subtasks
+      .map((s: string) => {
+        if (typeof s !== 'string') return '';
+        // Remove markdown formatting, numbers, bullets
+        return s
+          .replace(/^\d+[\.\)]\s*/, '')
+          .replace(/^[-•*]\s*/, '')
+          .replace(/^```[\w]*\n?/, '')
+          .replace(/\n?```$/, '')
+          .trim();
+      })
+      .filter((s: string) => {
+        // Remove empty, code-like, or junk entries
+        if (!s || s.length < 3) return false;
+        if (/^[\[\]{}<>\/\\,;:]+$/.test(s)) return false; // Only punctuation
+        if (/^(json|javascript|typescript|code|\/\/|<!--)/i.test(s)) return false;
+        if (s === '...' || s === '…') return false;
+        return true;
+      })
+      .slice(0, 5); // Max 5 subtasks
+
+    // If we got less than 2 valid subtasks, return fallback
+    if (cleanSubtasks.length < 2) {
+      return new Response(
+        JSON.stringify({ 
+          subtasks: [
+            'Review and understand the requirements',
+            'Break down into smaller steps',
+            'Complete the main work',
+            'Review and finalize'
+          ]
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
-      JSON.stringify({ subtasks }),
+      JSON.stringify({ subtasks: cleanSubtasks }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

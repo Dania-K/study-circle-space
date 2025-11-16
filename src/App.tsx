@@ -8,9 +8,10 @@ import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
-import ConvoRooms from "./pages/ConvoRooms";
+import Community from "./pages/Community";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { GlobalAIHelper } from "./components/GlobalAIHelper";
 
 const queryClient = new QueryClient();
 
@@ -25,12 +26,13 @@ const App = () => (
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
-          <Route path="/social" element={<ConvoRooms />} />
+            <Route path="/community" element={<Community />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
+        <GlobalAIHelper />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

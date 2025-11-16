@@ -2,9 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Users, Brain, Trophy, Sparkles } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/rooms");
+    }
+  }, [user, loading, navigate]);
 
   return (
     <div className="space-y-12 animate-slide-up">
@@ -28,23 +37,23 @@ const Home = () => {
           <Button 
             size="lg" 
             className="bg-gradient-primary hover:shadow-hover transition-all"
-            onClick={() => navigate("/rooms")}
+            onClick={() => navigate("/auth")}
           >
-            Join a Focus Room
+            Get Started
           </Button>
           <Button 
             size="lg" 
             variant="outline"
-            onClick={() => navigate("/tasks")}
+            onClick={() => navigate("/auth")}
           >
-            Start Planning
+            Sign In
           </Button>
         </div>
       </div>
 
       {/* Features Grid */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate("/rooms")}>
+        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-primary/20">
           <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
             <Users className="w-6 h-6 text-primary-foreground" />
           </div>
@@ -55,7 +64,7 @@ const Home = () => {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all cursor-pointer border-2 hover:border-secondary/20" onClick={() => navigate("/tasks")}>
+        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-secondary/20">
           <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center">
             <Brain className="w-6 h-6 text-secondary-foreground" />
           </div>
@@ -66,7 +75,7 @@ const Home = () => {
           </p>
         </Card>
 
-        <Card className="p-6 space-y-4 hover:shadow-hover transition-all cursor-pointer border-2 hover:border-accent/20" onClick={() => navigate("/dashboard")}>
+        <Card className="p-6 space-y-4 hover:shadow-hover transition-all border-2 hover:border-accent/20">
           <div className="w-12 h-12 bg-gradient-accent rounded-xl flex items-center justify-center">
             <Trophy className="w-6 h-6 text-accent-foreground" />
           </div>

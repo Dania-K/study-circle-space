@@ -1,7 +1,11 @@
+import { Outlet } from "react-router-dom";
 import { NavLink } from "./NavLink";
 import { Home, Users, ListTodo, LayoutDashboard } from "lucide-react";
+import { Button } from "./ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
-export const Layout = ({ children }: { children: React.ReactNode }) => {
+export const Layout = () => {
+  const { user, signOut } = useAuth();
   return (
     <div className="min-h-screen bg-gradient-hero">
       <nav className="bg-card border-b border-border shadow-soft sticky top-0 z-50 backdrop-blur-sm bg-card/80">
@@ -16,7 +20,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
               </span>
             </div>
             
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <NavLink
                 to="/"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
@@ -49,13 +53,18 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </NavLink>
+              {user && (
+                <Button variant="outline" size="sm" onClick={signOut} className="ml-2">
+                  Sign Out
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </nav>
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <Outlet />
       </main>
     </div>
   );

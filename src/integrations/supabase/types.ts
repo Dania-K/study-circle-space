@@ -14,7 +14,238 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      focus_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          in_session: boolean | null
+          subject: string
+          timer_end_timestamp: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          in_session?: boolean | null
+          subject: string
+          timer_end_timestamp?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          in_session?: boolean | null
+          subject?: string
+          timer_end_timestamp?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_anonymous: boolean | null
+          room_id: string
+          text: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean | null
+          room_id: string
+          text: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean | null
+          room_id?: string
+          text?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "focus_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          created_at: string
+          health: number
+          id: string
+          level: number
+          owner_id: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          health?: number
+          id?: string
+          level?: number
+          owner_id: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          health?: number
+          id?: string
+          level?: number
+          owner_id?: string
+          xp?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pets_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          last_activity: string | null
+          level: number
+          name: string | null
+          streak: number
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          last_activity?: string | null
+          level?: number
+          name?: string | null
+          streak?: number
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_activity?: string | null
+          level?: number
+          name?: string | null
+          streak?: number
+          xp?: number
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          completed_subtasks: number | null
+          created_at: string
+          end_time: string | null
+          id: string
+          is_anonymous: boolean | null
+          mood: string | null
+          room_id: string
+          start_time: string
+          subtasks: Json | null
+          task_text: string
+          user_id: string
+        }
+        Insert: {
+          completed_subtasks?: number | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          mood?: string | null
+          room_id: string
+          start_time?: string
+          subtasks?: Json | null
+          task_text: string
+          user_id: string
+        }
+        Update: {
+          completed_subtasks?: number | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          mood?: string | null
+          room_id?: string
+          start_time?: string
+          subtasks?: Json | null
+          task_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "focus_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          due_date: string | null
+          id: string
+          priority: string | null
+          subject: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          subject?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          subject?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

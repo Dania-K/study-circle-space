@@ -44,6 +44,7 @@ const Community = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "", category: "General" });
+  const [dailyQuestion, setDailyQuestion] = useState<Post | null>(null);
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
@@ -65,7 +66,11 @@ const Community = () => {
       .order('is_spotlight', { ascending: false })
       .order('created_at', { ascending: false });
     
-    if (!error && data) setPosts(data);
+    if (!error && data) {
+      setPosts(data);
+      const spotlight = data.find(p => p.is_spotlight);
+      setDailyQuestion(spotlight || null);
+    }
   };
 
   const loadComments = async (postId: string) => {
@@ -107,12 +112,36 @@ const Community = () => {
 
   const likePost = async (postId: string) => {
     const post = posts.find(p => p.id === postId);
-    if (!post) return;
+    if (!post || !user) return;
 
     await supabase
       .from('community_posts')
       .update({ likes: post.likes + 1 })
       .eq('id', postId);
+
+    // Award XP if this is the daily question and first upvote
+    if (post.is_spotlight && post.likes === 0) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('xp, total_lifetime_xp')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        await supabase
+          .from('profiles')
+          .update({
+            xp: profile.xp + 10,
+            total_lifetime_xp: (profile.total_lifetime_xp || 0) + 10
+          })
+          .eq('id', user.id);
+
+        toast({ 
+          title: "🎉 +10 XP!", 
+          description: "Your answer to the Daily AI Question was upvoted!"
+        });
+      }
+    }
 
     loadPosts();
   };

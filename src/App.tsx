@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import Landing from "./pages/Landing";
 import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import Tasks from "./pages/Tasks";
@@ -22,9 +23,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/community" element={<Community />} />
             <Route path="/tasks" element={<Tasks />} />

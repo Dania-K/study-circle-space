@@ -10,10 +10,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { Palette, Sparkles } from "lucide-react";
 
 const THEMES = [
-  { name: "Light", value: "light", colors: "from-blue-50 to-teal-50" },
-  { name: "Soft", value: "soft", colors: "from-purple-50 to-pink-50" },
-  { name: "Neutral", value: "neutral", colors: "from-gray-50 to-slate-50" },
-  { name: "High-Contrast", value: "high-contrast", colors: "from-white to-gray-100" }
+  { name: "Light", value: "light", colors: "from-blue-100 to-teal-100" },
+  { name: "Ocean", value: "ocean", colors: "from-blue-200 to-cyan-200" },
+  { name: "Forest", value: "forest", colors: "from-green-100 to-emerald-100" },
+  { name: "Sunset", value: "sunset", colors: "from-orange-100 to-pink-100" },
+  { name: "Lavender", value: "lavender", colors: "from-purple-100 to-pink-100" },
+  { name: "Midnight", value: "midnight", colors: "from-slate-800 to-blue-900" },
+  { name: "Charcoal", value: "charcoal", colors: "from-gray-800 to-gray-900" }
 ];
 
 const PETS = [

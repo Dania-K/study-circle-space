@@ -13,7 +13,7 @@ import Community from "./pages/Community";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import { GlobalAIHelper } from "./components/GlobalAIHelper";
+import { FloatingAIHelper } from "./components/FloatingAIHelper";
 import { useTheme } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
@@ -36,7 +36,7 @@ const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-      <GlobalAIHelper />
+      <FloatingAIHelper />
     </>
   );
 };

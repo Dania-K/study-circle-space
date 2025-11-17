@@ -241,119 +241,83 @@ const Home = () => {
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Row: Profile + Leaderboard Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left: Profile Hero Section - Compact */}
-        <Card className="glass-card p-4 shadow-elegant relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4">
-            {/* Pet + XP Ring */}
-            <div className="relative flex-shrink-0">
-              <svg className="w-20 h-20 -rotate-90">
-                <circle cx="40" cy="40" r="36" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
-                <circle
-                  cx="40" cy="40" r="36"
-                  stroke="url(#hero-gradient)"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeDasharray={`${2 * Math.PI * 36}`}
-                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - xpProgress)}`}
-                  className="transition-all duration-500"
-                />
-                <defs>
-                  <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#B7D8B5" />
-                    <stop offset="50%" stopColor="#D6CFC4" />
-                    <stop offset="100%" stopColor="#B7D8B5" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-4xl animate-float">
-                {petEmoji}
-              </div>
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1 space-y-2 text-center sm:text-left min-w-0">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold gradient-text truncate">{name}</h1>
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-muted-foreground text-xs">
-                  {profile?.school && <span className="truncate max-w-[150px]">{profile.school}</span>}
-                  {profile?.grade && profile?.school && <span>•</span>}
-                  {profile?.grade && <span>Grade {profile.grade}</span>}
+        {/* Left Column: Profile + My Classes */}
+        <div className="space-y-4">
+          {/* Profile Hero Section - Compact */}
+          <Card className="glass-card p-4 shadow-elegant relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
+            
+            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4">
+              {/* Pet + XP Ring */}
+              <div className="relative flex-shrink-0">
+                <svg className="w-20 h-20 -rotate-90">
+                  <circle cx="40" cy="40" r="36" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
+                  <circle
+                    cx="40" cy="40" r="36"
+                    stroke="url(#hero-gradient)"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeDasharray={`${2 * Math.PI * 36}`}
+                    strokeDashoffset={`${2 * Math.PI * 36 * (1 - xpProgress)}`}
+                    className="transition-all duration-500"
+                  />
+                  <defs>
+                    <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#B7D8B5" />
+                      <stop offset="50%" stopColor="#D6CFC4" />
+                      <stop offset="100%" stopColor="#B7D8B5" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center text-4xl animate-float">
+                  {petEmoji}
                 </div>
               </div>
 
-              {/* Level + XP */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm font-semibold">
-                  <span>Level {profile?.level || 1}</span>
-                  <span className="text-[#B7D8B5]">{profile?.xp || 0} / {nextLevelXP} XP</span>
+              {/* Profile Info */}
+              <div className="flex-1 space-y-2 text-center sm:text-left min-w-0">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold gradient-text truncate">{name}</h1>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-muted-foreground text-xs">
+                    {profile?.school && <span className="truncate max-w-[150px]">{profile.school}</span>}
+                    {profile?.grade && profile?.school && <span>•</span>}
+                    {profile?.grade && <span>Grade {profile.grade}</span>}
+                  </div>
                 </div>
-                <Progress value={xpProgress * 100} className="h-2" />
-              </div>
 
-              {/* Streak + Rank + Edit */}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                  🔥 {profile?.streak || 0} day
-                </Badge>
-                {userRank > 0 && (
-                  <Badge variant="outline" className="text-xs px-2 py-0.5">
-                    #{userRank}
+                {/* Level + XP */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span>Level {profile?.level || 1}</span>
+                    <span className="text-[#B7D8B5]">{profile?.xp || 0} / {nextLevelXP} XP</span>
+                  </div>
+                  <Progress value={xpProgress * 100} className="h-2" />
+                </div>
+
+                {/* Streak + Rank + Edit */}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                    🔥 {profile?.streak || 0} day
                   </Badge>
-                )}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsEditProfileOpen(true)}
-                  className="text-xs h-7 px-2"
-                >
-                  <Edit className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
+                  {userRank > 0 && (
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">
+                      #{userRank}
+                    </Badge>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsEditProfileOpen(true)}
+                    className="text-xs h-7 px-2"
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Right: Leaderboard */}
-        <Card className="glass-card p-4 shadow-elegant">
-          <div className="flex items-center gap-2 mb-3">
-            <Trophy className="w-5 h-5 text-[#B7D8B5]" />
-            <h2 className="text-lg font-bold">Weekly Top</h2>
-          </div>
-          <div className="space-y-2">
-            {leaderboard.slice(0, 10).map((user, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
-                  user.name === profile?.name || user.username === profile?.username
-                    ? "bg-[#B7D8B5]/20 ring-1 ring-[#B7D8B5]"
-                    : "bg-muted/30 hover:bg-muted/50"
-                  }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                  idx === 0 ? 'bg-yellow-500/20 text-yellow-600' :
-                  idx === 1 ? 'bg-gray-400/20 text-gray-600' :
-                  idx === 2 ? 'bg-orange-500/20 text-orange-600' :
-                  'bg-primary/20 text-primary text-xs'
-                }`}>
-                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold truncate">{user.name || user.username}</div>
-                  <div className="text-xs text-muted-foreground">{user.total_lifetime_xp.toLocaleString()} XP</div>
-                </div>
-                <Badge variant="secondary" className="text-xs px-1.5 py-0.5">L{user.level}</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Main Content Below */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-        <div className="space-y-6">
           {/* My Classes */}
           <Card className="glass-card p-4">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -363,86 +327,125 @@ const Home = () => {
             {/* Add New Class */}
             <div className="flex gap-2 mb-3">
               <Input
-                placeholder="Class name (e.g., AP Calculus)"
+                placeholder="Class name"
                 value={newClassName}
                 onChange={(e) => setNewClassName(e.target.value)}
-                className="flex-1"
+                className="flex-1 text-sm h-8"
               />
               <Input
-                placeholder="Subject (e.g., Math)"
+                placeholder="Subject"
                 value={newClassSubject}
                 onChange={(e) => setNewClassSubject(e.target.value)}
-                className="w-32"
+                className="w-24 text-sm h-8"
               />
-              <Button onClick={addClass} size="sm">Add</Button>
+              <Button onClick={addClass} size="sm" className="h-8 px-3 text-xs">Add</Button>
             </div>
 
             {/* Classes List */}
             {userClasses.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {userClasses.map((cls) => (
                   <div
                     key={cls.id}
                     className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{cls.class_name}</div>
+                      <div className="font-semibold text-xs truncate">{cls.class_name}</div>
                       <div className="text-xs text-muted-foreground">{cls.subject}</div>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteClass(cls.id)}
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-2">No classes yet. Add your first class above!</p>
+              <p className="text-xs text-muted-foreground text-center py-2">No classes yet. Add your first class above!</p>
             )}
           </Card>
+
           {/* Stats Cards */}
-          <div className="grid grid-cols-3 gap-3">
-            <Card className="glass-card p-4 text-center">
-              <CheckCircle className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
-              <div className="text-2xl font-bold">{stats.tasksCompleted}</div>
-              <div className="text-xs text-muted-foreground">Tasks Done</div>
+          <div className="grid grid-cols-3 gap-2">
+            <Card className="glass-card p-3 text-center">
+              <CheckCircle className="w-5 h-5 mx-auto mb-1 text-[#B7D8B5]" />
+              <div className="text-xl font-bold">{stats.tasksCompleted}</div>
+              <div className="text-xs text-muted-foreground">Tasks</div>
             </Card>
-            <Card className="glass-card p-4 text-center">
-              <Clock className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
-              <div className="text-2xl font-bold">{stats.focusMinutes}</div>
-              <div className="text-xs text-muted-foreground">Focus Mins</div>
+            <Card className="glass-card p-3 text-center">
+              <Clock className="w-5 h-5 mx-auto mb-1 text-[#B7D8B5]" />
+              <div className="text-xl font-bold">{stats.focusMinutes}</div>
+              <div className="text-xs text-muted-foreground">Minutes</div>
             </Card>
-            <Card className="glass-card p-4 text-center">
-              <Users className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
-              <div className="text-2xl font-bold">{stats.roomsJoined}</div>
+            <Card className="glass-card p-3 text-center">
+              <Users className="w-5 h-5 mx-auto mb-1 text-[#B7D8B5]" />
+              <div className="text-xl font-bold">{stats.roomsJoined}</div>
               <div className="text-xs text-muted-foreground">Rooms</div>
             </Card>
           </div>
+        </div>
 
-          {/* Quick Actions */}
-          <Card className="glass-card p-6">
-            <h3 className="font-semibold mb-4 text-lg">Quick Actions</h3>
-            <div className="grid grid-cols-3 gap-3">
-              <Button onClick={() => navigate('/rooms')} className="w-full h-20 text-base">
-                <Users className="w-5 h-5 mb-1" />
-                <span className="block text-sm">Focus Rooms</span>
-              </Button>
-              <Button onClick={() => navigate('/tasks')} variant="secondary" className="w-full h-20 text-base">
-                <CheckCircle className="w-5 h-5 mb-1" />
-                <span className="block text-sm">My Tasks</span>
-              </Button>
-              <Button onClick={() => navigate('/community')} variant="outline" className="w-full h-20 text-base">
-                <Sparkles className="w-5 h-5 mb-1" />
-                <span className="block text-sm">Community</span>
-              </Button>
-            </div>
-          </Card>
+        {/* Right: Leaderboard - Top 5 */}
+        <Card className="glass-card p-4 shadow-elegant">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="w-5 h-5 text-[#B7D8B5]" />
+            <h2 className="text-lg font-bold">Top 5 This Week</h2>
+          </div>
+          <div className="space-y-2">
+            {leaderboard.slice(0, 5).map((user, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center gap-2 p-3 rounded-lg transition-colors ${
+                  user.name === profile?.name || user.username === profile?.username
+                    ? "bg-[#B7D8B5]/20 ring-1 ring-[#B7D8B5]"
+                    : "bg-muted/30 hover:bg-muted/50"
+                  }`}
+              >
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
+                  idx === 0 ? 'bg-yellow-500/20 text-yellow-600 text-lg' :
+                  idx === 1 ? 'bg-gray-400/20 text-gray-600 text-lg' :
+                  idx === 2 ? 'bg-orange-500/20 text-orange-600 text-lg' :
+                  'bg-primary/20 text-primary text-sm'
+                }`}>
+                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate">{user.name || user.username}</div>
+                  <div className="text-xs text-muted-foreground">{user.total_lifetime_xp.toLocaleString()} XP</div>
+                </div>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">L{user.level}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
 
-          {/* AI Weekly Summary - Large and Prominent */}
+      {/* Main Content Below */}
+      <div className="space-y-4">
+        {/* Quick Actions - Smaller */}
+        <Card className="glass-card p-4">
+          <h3 className="font-semibold mb-3 text-sm">Quick Actions</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <Button onClick={() => navigate('/rooms')} className="h-16 text-sm flex-col gap-1">
+              <Users className="w-4 h-4" />
+              <span>Focus Rooms</span>
+            </Button>
+            <Button onClick={() => navigate('/tasks')} variant="secondary" className="h-16 text-sm flex-col gap-1">
+              <CheckCircle className="w-4 h-4" />
+              <span>My Tasks</span>
+            </Button>
+            <Button onClick={() => navigate('/community')} variant="outline" className="h-16 text-sm flex-col gap-1">
+              <Sparkles className="w-4 h-4" />
+              <span>Community</span>
+            </Button>
+          </div>
+        </Card>
+
+        {/* AI Weekly Summary - Large and Prominent */}
           <Card className="glass-card p-8 shadow-elegant">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -500,7 +503,6 @@ const Home = () => {
             </div>
           </Card>
         </div>
-      </div>
 
       <EditProfileModal
         open={isEditProfileOpen} 

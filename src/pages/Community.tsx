@@ -99,7 +99,7 @@ const Community = () => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, username')
+      .select('name, username, grade, school')
       .eq('id', user.id)
       .single();
 
@@ -178,7 +178,7 @@ const Community = () => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, username')
+      .select('name, username, grade, school')
       .eq('id', user.id)
       .single();
 

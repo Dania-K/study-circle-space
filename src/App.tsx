@@ -11,6 +11,7 @@ import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { GlobalAIHelper } from "./components/GlobalAIHelper";
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

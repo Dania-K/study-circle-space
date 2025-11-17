@@ -110,6 +110,19 @@ const Community = () => {
     }
   };
 
+  const deletePost = async (postId: string) => {
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', postId)
+      .eq('user_id', user!.id);
+
+    if (!error) {
+      loadPosts();
+      toast({ title: "Post deleted" });
+    }
+  };
+
   const likePost = async (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post || !user) return;
@@ -361,6 +374,19 @@ const Community = () => {
                   <MessageCircle className="w-4 h-4" />
                   <span className="text-sm">View discussion</span>
                 </div>
+                {post.user_id === user?.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deletePost(post.id);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
               </div>
             </Card>
           ))}

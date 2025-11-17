@@ -197,6 +197,7 @@ export type Database = {
           id: string
           level: number
           owner_id: string
+          pet_type: string | null
           xp: number
         }
         Insert: {
@@ -205,6 +206,7 @@ export type Database = {
           id?: string
           level?: number
           owner_id: string
+          pet_type?: string | null
           xp?: number
         }
         Update: {
@@ -213,6 +215,7 @@ export type Database = {
           id?: string
           level?: number
           owner_id?: string
+          pet_type?: string | null
           xp?: number
         }
         Relationships: [

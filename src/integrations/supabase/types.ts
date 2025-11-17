@@ -442,6 +442,33 @@ export type Database = {
           },
         ]
       }
+      user_classes: {
+        Row: {
+          class_name: string
+          created_at: string
+          id: string
+          subject: string
+          teacher_name: string | null
+          user_id: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          id?: string
+          subject: string
+          teacher_name?: string | null
+          user_id: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          teacher_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           classes: string[] | null

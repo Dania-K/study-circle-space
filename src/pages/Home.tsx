@@ -1,30 +1,44 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Trophy, Sparkles, Clock, Users, CheckCircle, BookOpen, Plus, Trash2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { Users, CheckSquare, MessageCircle, Sparkles, TrendingUp, Calendar, Target } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/use-toast";
 
-const PETS = [
-  { emoji: "🐣", name: "Chick", id: "chick" },
-  { emoji: "🐱", name: "Cat", id: "cat" },
-  { emoji: "🌱", name: "Sprout", id: "sprout" },
-  { emoji: "🤖", name: "Robot", id: "robot" },
-  { emoji: "🦊", name: "Fox", id: "fox" },
-];
+const PET_TYPES = {
+  chick: ["🥚", "🐣", "🐥", "🐤", "🐔"],
+  cat: ["🥚", "😺", "😸", "😻", "😼"],
+  sprout: ["🌱", "🌿", "🍃", "🌳", "🌲"],
+  robot: ["🔩", "🤖", "🦾", "🦿", "🚀"],
+  slime: ["💧", "💦", "💧", "🌊", "🌀"],
+  fox: ["🥚", "🦊", "🦊", "🦊", "🦊"],
+  owl: ["🥚", "🦉", "🦉", "🦉", "🦉"],
+  turtle: ["🥚", "🐢", "🐢", "🐢", "🐢"]
+};
 
 const Home = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { theme, changeTheme } = useTheme();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({ rooms: 0, posts: 0, streak: 0 });
+  const [pet, setPet] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({});
+  const [weeklySummary, setWeeklySummary] = useState<any>(null);
   const [dailyQuestion, setDailyQuestion] = useState<any>(null);
-  const [hasAnswered, setHasAnswered] = useState(false);
+  const [questionAnswer, setQuestionAnswer] = useState("");
+  const [userClasses, setUserClasses] = useState<any[]>([]);
+  const [newClass, setNewClass] = useState({ name: "", teacher: "", subject: "" });
+  const [isAddingClass, setIsAddingClass] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -33,39 +47,69 @@ const Home = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadPet();
+      loadLeaderboard();
       loadStats();
+      loadWeeklySummary();
       loadDailyQuestion();
+      loadUserClasses();
     }
   }, [user]);
 
   const loadProfile = async () => {
-    if (!user) return;
+    const { data } = await supabase.from('profiles').select('*').eq('id', user!.id).single();
+    setProfile(data);
+  };
+
+  const loadPet = async () => {
+    const { data } = await supabase.from('pets').select('*').eq('owner_id', user!.id).single();
+    setPet(data || {});
+  };
+
+  const loadLeaderboard = async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (data) setProfile(data);
+      .select('name, username, total_lifetime_xp, level')
+      .order('total_lifetime_xp', { ascending: false })
+      .limit(5);
+    setLeaderboard(data || []);
   };
 
   const loadStats = async () => {
-    if (!user) return;
+    const { data: sessions } = await supabase.from('sessions').select('*').eq('user_id', user!.id);
+    const { data: tasks } = await supabase.from('tasks').select('*').eq('user_id', user!.id).eq('completed', true);
     
-    const { data: rooms } = await supabase
-      .from('sessions')
-      .select('id')
-      .eq('user_id', user.id);
-
-    const { data: posts } = await supabase
-      .from('community_posts')
-      .select('id')
-      .eq('user_id', user.id);
+    const focusMinutes = sessions?.reduce((sum, s) => {
+      if (s.end_time) {
+        return sum + Math.floor((new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 60000);
+      }
+      return sum;
+    }, 0) || 0;
 
     setStats({
-      rooms: rooms?.length || 0,
-      posts: posts?.length || 0,
-      streak: profile?.streak || 0
+      tasksCompleted: tasks?.length || 0,
+      focusMinutes,
+      roomsJoined: sessions?.length || 0,
     });
+  };
+
+  const loadWeeklySummary = async () => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    
+    const { data } = await supabase
+      .from('weekly_summaries')
+      .select('*')
+      .eq('user_id', user!.id)
+      .eq('week_start', weekStart.toISOString().split('T')[0])
+      .maybeSingle();
+    
+    setWeeklySummary(data);
+  };
+
+  const generateWeeklySummary = async () => {
+    const { data } = await supabase.functions.invoke('generate-weekly-summary', { body: { userId: user!.id } });
+    if (data) loadWeeklySummary();
   };
 
   const loadDailyQuestion = async () => {
@@ -73,181 +117,341 @@ const Home = () => {
       .from('community_posts')
       .select('*')
       .eq('is_spotlight', true)
-      .single();
-    
-    if (data) {
-      setDailyQuestion(data);
-      
-      // Check if user has answered
-      const { data: answers } = await supabase
-        .from('community_comments')
-        .select('id')
-        .eq('post_id', data.id)
-        .eq('user_id', user!.id);
-      
-      setHasAnswered((answers?.length || 0) > 0);
-    }
+      .maybeSingle();
+    setDailyQuestion(data);
+  };
+
+  const loadUserClasses = async () => {
+    const { data } = await supabase
+      .from('user_classes')
+      .select('*')
+      .eq('user_id', user!.id)
+      .order('created_at', { ascending: false });
+    setUserClasses(data || []);
+  };
+
+  const addClass = async () => {
+    if (!newClass.name || !newClass.subject) return;
+    await supabase.from('user_classes').insert({
+      user_id: user!.id,
+      class_name: newClass.name,
+      teacher_name: newClass.teacher,
+      subject: newClass.subject
+    });
+    setNewClass({ name: "", teacher: "", subject: "" });
+    setIsAddingClass(false);
+    loadUserClasses();
+    toast({ title: "Class added!" });
+  };
+
+  const deleteClass = async (id: string) => {
+    await supabase.from('user_classes').delete().eq('id', id);
+    loadUserClasses();
+    toast({ title: "Class removed" });
   };
 
   const answerDailyQuestion = async () => {
-    if (!dailyQuestion || hasAnswered) return;
+    if (!questionAnswer.trim() || !dailyQuestion) return;
     
-    toast({ title: "Opening daily question..." });
-    navigate('/community');
+    await supabase.from('community_comments').insert({
+      post_id: dailyQuestion.id,
+      user_id: user!.id,
+      username: profile?.name || profile?.username || 'Anonymous',
+      content: questionAnswer
+    });
+
+    // Award XP
+    const newXP = (profile?.xp || 0) + 10;
+    const newTotalXP = (profile?.total_lifetime_xp || 0) + 10;
+    const newLevel = Math.floor(newTotalXP / 100) + 1;
+
+    await supabase.from('profiles').update({
+      xp: newXP,
+      total_lifetime_xp: newTotalXP,
+      level: newLevel
+    }).eq('id', user!.id);
+
+    setQuestionAnswer("");
+    toast({ title: "+10 XP for answering! 🎉" });
+    loadProfile();
   };
 
-  if (loading || !profile) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  const updatePetType = async (type: string) => {
+    if (!pet?.id) return;
+    await supabase.from('pets').update({ pet_type: type }).eq('id', pet.id);
+    loadPet();
+    toast({ title: "Pet changed!" });
+  };
 
-  const selectedPet = PETS.find(p => p.id === (localStorage.getItem('selected_pet') || 'chick')) || PETS[0];
-  const xpProgress = (profile.xp % 100);
-  const currentLevel = Math.floor(profile.xp / 100) + 1;
+  if (loading || !profile) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+
+  const petType = (pet?.pet_type || 'chick') as keyof typeof PET_TYPES;
+  const petStage = Math.min(Math.floor((profile.total_lifetime_xp || 0) / 25), 4);
+  const petEmoji = PET_TYPES[petType][petStage];
+  const name = profile.name || profile.username || "Student";
+  const userRank = leaderboard.findIndex(u => (u.name === profile.name || u.username === profile.username)) + 1;
+  const xpProgress = ((profile.xp % 100) / 100) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-hero p-6 space-y-6">
-      {/* Hero Profile Section */}
-      <Card className="glass-card p-8">
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Left: User Info */}
-          <div className="space-y-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                Welcome back, {profile.name || 'Student'}! 👋
-              </h1>
-              <p className="text-muted-foreground">Ready to crush your goals today?</p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="text-6xl">{selectedPet.emoji}</div>
-                <Badge className="absolute -bottom-1 -right-1 bg-gradient-primary">
-                  Lv {currentLevel}
-                </Badge>
+    <div className="container mx-auto p-8 space-y-10">
+      {/* Header with Profile & Pet */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Profile Card */}
+        <Card className="p-8 space-y-6 hover-lift">
+          <div className="flex items-center gap-6">
+            <div className="text-8xl">{petEmoji}</div>
+            <div className="flex-1 space-y-3">
+              <h1 className="text-4xl font-bold">Welcome, {name}!</h1>
+              <div className="flex items-center gap-4">
+                <Badge variant="secondary" className="text-lg px-4 py-1">Level {profile.level}</Badge>
+                <Badge variant="outline" className="text-lg px-4 py-1">🔥 {profile.streak} day streak</Badge>
               </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-semibold">{selectedPet.name}</span>
-                  <span className="text-muted-foreground">{profile.xp} XP</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>XP Progress</span>
+                  <span>{profile.xp % 100}/100</span>
                 </div>
                 <Progress value={xpProgress} className="h-3" />
-                <p className="text-xs text-muted-foreground">
-                  {100 - xpProgress} XP to level {currentLevel + 1}
-                </p>
               </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Card className="flex-1 p-3 bg-primary/10 border-primary/20">
-                <div className="text-2xl font-bold text-primary">{stats.streak}</div>
-                <div className="text-xs text-muted-foreground">Day Streak 🔥</div>
-              </Card>
-              <Card className="flex-1 p-3 bg-accent/10 border-accent/20">
-                <div className="text-2xl font-bold text-accent">{stats.rooms}</div>
-                <div className="text-xs text-muted-foreground">Sessions</div>
-              </Card>
-              <Card className="flex-1 p-3 bg-secondary/50 border-secondary">
-                <div className="text-2xl font-bold">{stats.posts}</div>
-                <div className="text-xs text-muted-foreground">Posts</div>
-              </Card>
             </div>
           </div>
 
-          {/* Right: Daily Question */}
-          <Card className="p-6 bg-gradient-accent hover-lift border-2 border-accent/30">
-            <div className="flex items-start gap-3 mb-4">
-              <Sparkles className="w-6 h-6 text-accent-foreground" />
-              <div>
-                <h3 className="font-bold text-accent-foreground">Question of the Day</h3>
-                <p className="text-sm text-accent-foreground/80">Answer to earn +10 XP!</p>
-              </div>
+          {/* Theme & Pet Selectors */}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Theme</label>
+              <Select value={theme} onValueChange={changeTheme}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="ocean">Ocean</SelectItem>
+                  <SelectItem value="forest">Forest</SelectItem>
+                  <SelectItem value="sunset">Sunset</SelectItem>
+                  <SelectItem value="lavender">Lavender</SelectItem>
+                  <SelectItem value="midnight">Midnight</SelectItem>
+                  <SelectItem value="charcoal">Charcoal</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            {dailyQuestion ? (
-              <>
-                <p className="text-accent-foreground mb-4 font-medium">{dailyQuestion.title}</p>
-                <Button
-                  onClick={answerDailyQuestion}
-                  disabled={hasAnswered}
-                  className="w-full bg-white text-accent hover:bg-white/90"
-                >
-                  {hasAnswered ? "Already Answered ✓" : "Answer Now +10 XP"}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Pet</label>
+              <Select value={petType} onValueChange={updatePetType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="chick">🐣 Chick</SelectItem>
+                  <SelectItem value="cat">🐱 Cat</SelectItem>
+                  <SelectItem value="sprout">🌱 Sprout</SelectItem>
+                  <SelectItem value="robot">🤖 Robot</SelectItem>
+                  <SelectItem value="slime">💧 Slime</SelectItem>
+                  <SelectItem value="fox">🦊 Fox</SelectItem>
+                  <SelectItem value="owl">🦉 Owl</SelectItem>
+                  <SelectItem value="turtle">🐢 Turtle</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </Card>
+
+        {/* Daily Question Card */}
+        <Card className="p-8 space-y-4 hover-lift">
+          <div className="flex items-center gap-3 mb-4">
+            <Sparkles className="w-6 h-6 text-accent" />
+            <h2 className="text-2xl font-bold">Question of the Day</h2>
+          </div>
+          {dailyQuestion ? (
+            <>
+              <p className="text-lg font-medium">{dailyQuestion.title}</p>
+              <p className="text-muted-foreground">{dailyQuestion.content}</p>
+              <div className="flex gap-2 pt-2">
+                <Input 
+                  placeholder="Your answer..." 
+                  value={questionAnswer}
+                  onChange={(e) => setQuestionAnswer(e.target.value)}
+                />
+                <Button onClick={answerDailyQuestion} className="bg-gradient-primary">
+                  <Send className="w-4 h-4" />
                 </Button>
-              </>
-            ) : (
-              <p className="text-accent-foreground/60 text-sm">Check back tomorrow!</p>
-            )}
-          </Card>
-        </div>
-      </Card>
-
-      {/* Quick Actions */}
-      <div className="space-y-3">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Target className="w-6 h-6" />
-          Quick Actions
-        </h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card 
-            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
-            onClick={() => navigate('/rooms')}
-          >
-            <Users className="w-10 h-10 mb-3 text-primary group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-lg mb-1">Join Focus Room</h3>
-            <p className="text-sm text-muted-foreground">Study with others in real-time</p>
-          </Card>
-
-          <Card 
-            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20"
-            onClick={() => navigate('/tasks')}
-          >
-            <CheckSquare className="w-10 h-10 mb-3 text-accent group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-lg mb-1">Manage Tasks</h3>
-            <p className="text-sm text-muted-foreground">Organize your assignments</p>
-          </Card>
-
-          <Card 
-            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-secondary/30 to-secondary/50 border-secondary"
-            onClick={() => navigate('/community')}
-          >
-            <MessageCircle className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-bold text-lg mb-1">Community</h3>
-            <p className="text-sm text-muted-foreground">Share tips and get support</p>
-          </Card>
-        </div>
+              </div>
+              <p className="text-sm text-muted-foreground">+10 XP for answering</p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">Check back tomorrow for a new question!</p>
+          )}
+        </Card>
       </div>
 
-      {/* Daily Stats Overview */}
-      <Card className="glass-card p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
-          Today's Progress
+      {/* Stats Row */}
+      <div className="grid md:grid-cols-4 gap-6">
+        <Card className="p-6 hover-lift">
+          <div className="flex items-center gap-4">
+            <CheckCircle className="w-10 h-10 text-primary" />
+            <div>
+              <p className="text-3xl font-bold">{stats.tasksCompleted}</p>
+              <p className="text-sm text-muted-foreground">Tasks Done</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6 hover-lift">
+          <div className="flex items-center gap-4">
+            <Clock className="w-10 h-10 text-accent" />
+            <div>
+              <p className="text-3xl font-bold">{stats.focusMinutes}</p>
+              <p className="text-sm text-muted-foreground">Focus Minutes</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6 hover-lift">
+          <div className="flex items-center gap-4">
+            <Users className="w-10 h-10 text-primary" />
+            <div>
+              <p className="text-3xl font-bold">{stats.roomsJoined}</p>
+              <p className="text-sm text-muted-foreground">Rooms Joined</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-6 hover-lift">
+          <div className="flex items-center gap-4">
+            <Trophy className="w-10 h-10 text-accent" />
+            <div>
+              <p className="text-3xl font-bold">#{userRank || '-'}</p>
+              <p className="text-sm text-muted-foreground">Global Rank</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <Button 
+          onClick={() => navigate('/rooms')} 
+          className="h-20 text-lg bg-gradient-primary hover:scale-105 transition-transform"
+        >
+          <Users className="w-6 h-6 mr-2" /> Focus Rooms
+        </Button>
+        <Button 
+          onClick={() => navigate('/tasks')} 
+          className="h-20 text-lg bg-gradient-accent hover:scale-105 transition-transform"
+        >
+          <CheckCircle className="w-6 h-6 mr-2" /> Tasks
+        </Button>
+        <Button 
+          onClick={() => navigate('/community')} 
+          className="h-20 text-lg bg-gradient-warm hover:scale-105 transition-transform"
+        >
+          <Sparkles className="w-6 h-6 mr-2" /> Community
+        </Button>
+      </div>
+
+      {/* My Classes & Leaderboard */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* My Classes */}
+        <Card className="p-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <BookOpen className="w-6 h-6" /> My Classes
+            </h2>
+            <Dialog open={isAddingClass} onOpenChange={setIsAddingClass}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Plus className="w-4 h-4 mr-1" /> Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add a Class</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <Input 
+                    placeholder="Class name (e.g., AP Biology)" 
+                    value={newClass.name}
+                    onChange={(e) => setNewClass({...newClass, name: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="Teacher (optional)" 
+                    value={newClass.teacher}
+                    onChange={(e) => setNewClass({...newClass, teacher: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="Subject (e.g., Science)" 
+                    value={newClass.subject}
+                    onChange={(e) => setNewClass({...newClass, subject: e.target.value})}
+                  />
+                  <Button onClick={addClass} className="w-full">Add Class</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="space-y-2">
+            {userClasses.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No classes yet. Add one to get started!</p>
+            ) : (
+              userClasses.map((cls) => (
+                <Card key={cls.id} className="p-4 flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{cls.class_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {cls.teacher_name && `${cls.teacher_name} • `}{cls.subject}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => deleteClass(cls.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </Card>
+              ))
+            )}
+          </div>
+        </Card>
+
+        {/* Leaderboard */}
+        <Card className="p-6 space-y-4">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-accent" /> Top 5 Leaderboard
+          </h2>
+          <div className="space-y-2">
+            {leaderboard.map((user, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  user.name === profile.name || user.username === profile.username ? 'bg-primary/10' : 'bg-muted/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold text-muted-foreground">#{index + 1}</span>
+                  <span className="font-medium">{user.name || user.username}</span>
+                </div>
+                <Badge variant="secondary">{user.total_lifetime_xp} XP</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* AI Weekly Summary */}
+      <Card className="p-8 space-y-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <Sparkles className="w-6 h-6 text-accent" /> AI Weekly Summary
         </h2>
-        <div className="grid md:grid-cols-4 gap-4">
-          <div className="text-center p-4 rounded-lg bg-muted/50">
-            <Calendar className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <div className="text-2xl font-bold">{profile.xp}</div>
-            <div className="text-xs text-muted-foreground">Total XP</div>
+        {weeklySummary ? (
+          <div className="space-y-3">
+            <p className="text-lg leading-relaxed">{weeklySummary.summary_text}</p>
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              <span>📊 {weeklySummary.tasks_completed} tasks</span>
+              <span>⏱️ {weeklySummary.focus_minutes} minutes</span>
+              <span>⭐ +{weeklySummary.xp_gained} XP</span>
+            </div>
           </div>
-          <div className="text-center p-4 rounded-lg bg-muted/50">
-            <Users className="w-8 h-8 mx-auto mb-2 text-accent" />
-            <div className="text-2xl font-bold">{stats.rooms}</div>
-            <div className="text-xs text-muted-foreground">Focus Sessions</div>
+        ) : (
+          <div className="text-center py-8 space-y-4">
+            <p className="text-muted-foreground">No summary yet for this week</p>
+            <Button onClick={generateWeeklySummary} variant="outline">
+              <Sparkles className="w-4 h-4 mr-2" /> Generate Summary
+            </Button>
           </div>
-          <div className="text-center p-4 rounded-lg bg-muted/50">
-            <CheckSquare className="w-8 h-8 mx-auto mb-2 text-primary" />
-            <div className="text-2xl font-bold">Lv {currentLevel}</div>
-            <div className="text-xs text-muted-foreground">Current Level</div>
-          </div>
-          <div className="text-center p-4 rounded-lg bg-muted/50">
-            <MessageCircle className="w-8 h-8 mx-auto mb-2 text-accent" />
-            <div className="text-2xl font-bold">{stats.posts}</div>
-            <div className="text-xs text-muted-foreground">Community Posts</div>
-          </div>
-        </div>
+        )}
       </Card>
     </div>
   );

@@ -14,8 +14,32 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { GlobalAIHelper } from "./components/GlobalAIHelper";
+import { useTheme } from "./hooks/useTheme";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  useTheme(); // Initialize theme globally
+  
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route element={<Layout />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+      <GlobalAIHelper />
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -23,20 +47,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route element={<Layout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-        <GlobalAIHelper />
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

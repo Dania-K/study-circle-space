@@ -217,6 +217,19 @@ const Community = () => {
                 <MessageCircle className="w-4 h-4" />
                 {comments.length} comments
               </div>
+              {selectedPost.user_id === user?.id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    deletePost(selectedPost.id);
+                    setSelectedPost(null);
+                  }}
+                >
+                  Delete Post
+                </Button>
+              )}
             </div>
           </Card>
 

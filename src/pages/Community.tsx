@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, MessageCircle, Star, Plus, Send, TrendingUp } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Heart, MessageCircle, Star, Plus, Send, TrendingUp, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,14 @@ interface Comment {
 
 const CATEGORIES = ["Motivation", "Study Tips", "Goals", "Struggles", "Wins", "General"];
 
+const DAILY_QUOTES = [
+  "Success is the sum of small efforts repeated day in and day out.",
+  "The expert in anything was once a beginner.",
+  "Education is the most powerful weapon which you can use to change the world.",
+  "The beautiful thing about learning is that no one can take it away from you.",
+  "Don't watch the clock; do what it does. Keep going."
+];
+
 const Community = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
@@ -46,6 +55,8 @@ const Community = () => {
   const [newPost, setNewPost] = useState({ title: "", content: "", category: "General" });
   const [dailyQuestion, setDailyQuestion] = useState<Post | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [dailyQuote] = useState(() => DAILY_QUOTES[Math.floor(Math.random() * DAILY_QUOTES.length)]);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -110,17 +121,23 @@ const Community = () => {
     }
   };
 
-  const deletePost = async (postId: string) => {
+  const confirmDeletePost = async () => {
+    if (!deletePostId) return;
+
     const { error } = await supabase
       .from('community_posts')
       .delete()
-      .eq('id', postId)
+      .eq('id', deletePostId)
       .eq('user_id', user!.id);
 
     if (!error) {
       loadPosts();
       toast({ title: "Post deleted" });
+      if (selectedPost?.id === deletePostId) {
+        setSelectedPost(null);
+      }
     }
+    setDeletePostId(null);
   };
 
   const likePost = async (postId: string) => {
@@ -132,8 +149,8 @@ const Community = () => {
       .update({ likes: post.likes + 1 })
       .eq('id', postId);
 
-    // Award XP if this is the daily question and first upvote
-    if (post.is_spotlight && post.likes === 0) {
+    // Award XP if this is the QOTD
+    if (post.is_spotlight) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('xp, total_lifetime_xp')
@@ -148,11 +165,8 @@ const Community = () => {
             total_lifetime_xp: (profile.total_lifetime_xp || 0) + 10
           })
           .eq('id', user.id);
-
-        toast({ 
-          title: "🎉 +10 XP!", 
-          description: "Your answer to the Daily AI Question was upvoted!"
-        });
+        
+        toast({ title: "+10 XP for engaging with Question of the Day! ✨" });
       }
     }
 
@@ -222,10 +236,7 @@ const Community = () => {
                   variant="ghost"
                   size="sm"
                   className="ml-auto text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => {
-                    deletePost(selectedPost.id);
-                    setSelectedPost(null);
-                  }}
+                  onClick={() => setDeletePostId(selectedPost.id)}
                 >
                   Delete Post
                 </Button>
@@ -394,7 +405,7 @@ const Community = () => {
                     className="ml-auto text-destructive"
                     onClick={(e) => {
                       e.stopPropagation();
-                      deletePost(post.id);
+                      setDeletePostId(post.id);
                     }}
                   >
                     Delete
@@ -405,6 +416,21 @@ const Community = () => {
           ))}
         </div>
       </div>
+
+      <AlertDialog open={deletePostId !== null} onOpenChange={(open) => !open && setDeletePostId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePost}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

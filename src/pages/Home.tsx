@@ -52,8 +52,6 @@ const Home = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
   const [weeklySummary, setWeeklySummary] = useState<any>(null);
-  const [userClasses, setUserClasses] = useState<any[]>([]);
-  const [newClass, setNewClass] = useState({ name: "", subject: "", teacher: "" });
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   useEffect(() => {
@@ -67,7 +65,6 @@ const Home = () => {
       loadLeaderboard();
       loadStats();
       loadWeeklySummary();
-      loadUserClasses();
     }
   }, [user]);
 
@@ -164,36 +161,6 @@ const Home = () => {
     }
   };
 
-  const loadUserClasses = async () => {
-    const { data } = await supabase
-      .from('user_classes')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('created_at', { ascending: false });
-    setUserClasses(data || []);
-  };
-
-  const addClass = async () => {
-    if (!newClass.name || !newClass.subject) return;
-    
-    await supabase.from('user_classes').insert({
-      user_id: user!.id,
-      class_name: newClass.name,
-      subject: newClass.subject,
-      teacher_name: newClass.teacher || null,
-    });
-
-    setNewClass({ name: "", subject: "", teacher: "" });
-    loadUserClasses();
-    toast({ title: "Class added! 📚" });
-  };
-
-  const deleteClass = async (classId: string) => {
-    await supabase.from('user_classes').delete().eq('id', classId);
-    loadUserClasses();
-    toast({ title: "Class removed" });
-  };
-
   const updatePetType = async (petType: string) => {
     if (!pet) return;
     
@@ -220,126 +187,75 @@ const Home = () => {
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Row: Profile + Leaderboard Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left: Profile Hero Section */}
-        <Card className="glass-card p-6 sm:p-8 shadow-elegant relative overflow-hidden lg:col-span-3">
-          {/* Subtle background gradient */}
+        {/* Left: Profile Hero Section - Simplified */}
+        <Card className="glass-card p-6 shadow-elegant relative overflow-hidden lg:col-span-3">
           <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
           
-          <div className="relative z-10">
-            <div className="flex flex-col items-center text-center space-y-4">
-              {/* Pet + XP Ring - Smaller */}
-              <div className="relative">
-                <svg className="w-32 h-32 sm:w-36 sm:h-36 -rotate-90">
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="64"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="10"
-                    fill="none"
-                  />
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="64"
-                    stroke="url(#hero-gradient)"
-                    strokeWidth="10"
-                    fill="none"
-                    strokeDasharray={`${2 * Math.PI * 64}`}
-                    strokeDashoffset={`${2 * Math.PI * 64 * (1 - xpProgress)}`}
-                    className="transition-all duration-500"
-                  />
-                  <defs>
-                    <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#B7D8B5" />
-                      <stop offset="50%" stopColor="#D6CFC4" />
-                      <stop offset="100%" stopColor="#B7D8B5" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-6xl animate-float">
-                  {petEmoji}
-                </div>
+          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6">
+            {/* Pet + XP Ring */}
+            <div className="relative flex-shrink-0">
+              <svg className="w-28 h-28 -rotate-90">
+                <circle cx="56" cy="56" r="50" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+                <circle
+                  cx="56" cy="56" r="50"
+                  stroke="url(#hero-gradient)"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 50}`}
+                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - xpProgress)}`}
+                  className="transition-all duration-500"
+                />
+                <defs>
+                  <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#B7D8B5" />
+                    <stop offset="50%" stopColor="#D6CFC4" />
+                    <stop offset="100%" stopColor="#B7D8B5" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-5xl animate-float">
+                {petEmoji}
               </div>
+            </div>
 
-              {/* Name + School Info */}
-              <div className="space-y-1">
-                <h1 className="text-3xl sm:text-4xl font-bold gradient-text">{name}</h1>
-                <div className="flex flex-wrap items-center justify-center gap-2 text-muted-foreground text-xs sm:text-sm">
+            {/* Profile Info */}
+            <div className="flex-1 space-y-3 text-center sm:text-left">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold gradient-text">{name}</h1>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-muted-foreground text-xs mt-1">
                   {profile?.school && <span>{profile.school}</span>}
                   {profile?.grade && profile?.school && <span>•</span>}
                   {profile?.grade && <span>Grade {profile.grade}</span>}
                 </div>
               </div>
 
-              {/* Level + XP Bar */}
-              <div className="space-y-2 w-full max-w-md px-4">
-                <div className="flex items-center justify-between text-lg sm:text-xl font-bold">
+              {/* Level + XP */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-base font-bold">
                   <span>Level {profile?.level || 1}</span>
                   <span className="text-[#B7D8B5]">{profile?.xp || 0} / {nextLevelXP} XP</span>
                 </div>
-                <Progress value={xpProgress * 100} className="h-3 shadow-lg" />
+                <Progress value={xpProgress * 100} className="h-2.5" />
               </div>
 
-              {/* Streak + Rank Badges */}
-              <div className="flex gap-3 sm:gap-4 flex-wrap justify-center">
-                <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg hover-lift">
-                  🔥 {profile?.streak || 0} Day Streak
+              {/* Badges Row */}
+              <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+                <Badge variant="secondary" className="text-sm px-3 py-1">
+                  🔥 {profile?.streak || 0} Day
                 </Badge>
-                <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg hover-lift">
-                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <Badge variant="secondary" className="text-sm px-3 py-1">
+                  <Trophy className="w-3 h-3 mr-1" />
                   Rank #{userRank > 0 ? userRank : '-'}
                 </Badge>
-              </div>
-
-              {/* Edit Profile + Theme/Pet Selectors - More Compact */}
-              <div className="flex flex-col sm:flex-row gap-3 items-center w-full max-w-2xl pt-2">
                 <Button 
                   variant="outline" 
-                  size="default" 
+                  size="sm"
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
+                  className="ml-auto"
                 >
-                  <Edit className="w-4 h-4 mr-2" />
+                  <Edit className="w-3 h-3 mr-1" />
                   Edit Profile
                 </Button>
-                
-                <div className="flex gap-3 w-full sm:w-auto">
-                  <Select value={theme} onValueChange={changeTheme}>
-                    <SelectTrigger className="w-full sm:w-36">
-                      <SelectValue placeholder="Theme" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {THEMES.map(t => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Pet Selection - Compact */}
-              <div className="w-full max-w-lg space-y-2">
-                <label className="text-xs font-medium flex items-center justify-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  Choose Your Study Pet
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {PETS.map(p => (
-                    <button
-                      key={p.id}
-                      onClick={() => updatePetType(p.id)}
-                      className={`p-2 rounded-lg text-2xl hover:scale-110 transition-transform ${
-                        petType === p.id ? "bg-[#B7D8B5]/30 ring-2 ring-[#B7D8B5]" : "bg-secondary/30"
-                      }`}
-                      title={p.name}
-                    >
-                      {p.emoji}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
@@ -480,52 +396,20 @@ const Home = () => {
               )}
             </div>
           </Card>
-
-          {/* My Classes */}
-          <Card className="glass-card p-6">
-            <h3 className="font-semibold mb-4 text-lg">My Classes</h3>
-            <div className="space-y-3">
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {userClasses.map(cls => (
-                  <div key={cls.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{cls.class_name}</div>
-                      <div className="text-xs text-muted-foreground">{cls.subject}</div>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => deleteClass(cls.id)}
-                      className="h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-2 pt-2 border-t">
-                <Input
-                  placeholder="Class name..."
-                  value={newClass.name}
-                  onChange={e => setNewClass({ ...newClass, name: e.target.value })}
-                />
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Subject..."
-                    value={newClass.subject}
-                    onChange={e => setNewClass({ ...newClass, subject: e.target.value })}
-                  />
-                  <Button onClick={addClass}>Add</Button>
-                </div>
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
 
       <EditProfileModal
         open={isEditProfileOpen} 
         onOpenChange={setIsEditProfileOpen}
+        currentTheme={theme}
+        currentPetType={pet?.pet_type || 'chick'}
+        onThemeChange={changeTheme}
+        onPetTypeChange={updatePetType}
+        onProfileUpdate={() => {
+          loadProfile();
+          loadPet();
+        }}
       />
     </div>
   );

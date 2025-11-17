@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,15 +9,22 @@ import { Zap, Users, Target, TrendingUp, Sparkles, Clock, BookOpen, Rocket } fro
 
 const Home = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [liveRooms, setLiveRooms] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({});
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [dailyQuestion, setDailyQuestion] = useState<any>(null);
+
+  useEffect(() => {
+    if (!loading && !user) navigate("/");
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
       loadProfile();
       loadLiveRooms();
-      loadStats();
+      loadRecentPosts();
+      loadDailyQuestion();
     }
   }, [user]);
 
@@ -31,196 +38,227 @@ const Home = () => {
       .from('focus_rooms')
       .select('*')
       .eq('in_session', true)
-      .limit(3);
+      .limit(4);
     setLiveRooms(data || []);
   };
 
-  const loadStats = async () => {
-    const { data: tasks } = await supabase
-      .from('tasks')
+  const loadRecentPosts = async () => {
+    const { data } = await supabase
+      .from('community_posts')
       .select('*')
-      .eq('user_id', user!.id)
-      .eq('completed', true);
-    
-    const { data: sessions } = await supabase
-      .from('sessions')
-      .select('*')
-      .eq('user_id', user!.id);
-
-    setStats({
-      tasksCompleted: tasks?.length || 0,
-      sessionsJoined: sessions?.length || 0,
-    });
+      .order('created_at', { ascending: false })
+      .limit(3);
+    setRecentPosts(data || []);
   };
 
-  if (loading) return null;
+  const loadDailyQuestion = async () => {
+    const { data } = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('is_spotlight', true)
+      .single();
+    setDailyQuestion(data);
+  };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen overflow-hidden relative bg-background">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        
-        <div className="relative container mx-auto px-4 py-16">
-          <div className="text-center mb-16 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border mb-6 shadow-soft">
-              <Rocket className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">The Future of Student Productivity</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-foreground">
-              StudiCircle
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto font-light leading-relaxed">
-              Transform your study habits with AI-powered focus rooms, 
-              <span className="text-primary font-semibold"> gamified learning</span>, 
-              and a supportive community
-            </p>
-            <Link to="/auth">
-              <Button 
-                size="lg" 
-                className="text-base px-10 py-6 rounded-full shadow-elegant hover:shadow-hover hover:scale-105 transition-all duration-300"
-              >
-                Get Started Free
-                <Sparkles className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
-            {[
-              { icon: Users, title: "Smart Focus Rooms", desc: "Join synchronized Pomodoro sessions with AI-powered task breakdowns", color: "text-primary" },
-              { icon: Target, title: "AI Study Plans", desc: "Let AI create personalized study plans tailored to your deadlines", color: "text-accent" },
-              { icon: TrendingUp, title: "Level Up & Earn", desc: "Gain XP, unlock badges, and watch your study avatar evolve", color: "text-primary" }
-            ].map((feature, idx) => (
-              <Card 
-                key={idx}
-                className="p-8 hover-lift shadow-card border-border/50 bg-card/80 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-700"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <feature.icon className={`w-10 h-10 mb-4 ${feature.color}`} />
-                <h3 className="text-xl font-semibold mb-3 text-foreground">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (loading || !profile) return <div>Loading...</div>;
 
   const AVATAR_STAGES = ["🥚", "🐣", "🐥", "🐦", "🦅"];
-  const avatarStage = Math.min(Math.floor((profile?.total_lifetime_xp || 0) / 100), 4);
-  const name = profile?.name || profile?.username || "Student";
+  const avatarStage = Math.min(Math.floor((profile.total_lifetime_xp || 0) / 100), 4);
 
   return (
-    <div className="space-y-8">
-      <div className="relative overflow-hidden rounded-[2.5rem] glass-card p-10 shadow-xl animate-in fade-in slide-in-from-top-5 duration-700">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10" />
-        <div className="relative flex items-center gap-6 mb-8">
-          <div className="text-8xl animate-float">{AVATAR_STAGES[avatarStage]}</div>
-          <div>
-            <h1 className="text-4xl font-bold mb-2 gradient-text">
-              Welcome back, {name}! 👋
-            </h1>
-            <p className="text-xl text-muted-foreground">Ready to level up your learning?</p>
-          </div>
-        </div>
-        
-        <div className="relative grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Zap, label: "Level", value: profile?.level || 1, gradient: "from-purple-500 to-pink-500" },
-            { icon: Target, label: "Total XP", value: profile?.total_lifetime_xp || 0, gradient: "from-pink-500 to-orange-500" },
-            { icon: BookOpen, label: "Tasks Done", value: stats.tasksCompleted, gradient: "from-cyan-500 to-blue-500" },
-            { icon: Users, label: "Sessions", value: stats.sessionsJoined, gradient: "from-green-500 to-teal-500" }
-          ].map((stat, idx) => (
-            <Card key={idx} className="glass-card p-6 hover-lift group">
-              <div className={`flex items-center gap-3 mb-3`}>
-                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                  <stat.icon className="w-5 h-5 text-white" />
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Welcome Header */}
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold">Welcome back, {profile.name || profile.username}! 👋</h1>
+        <p className="text-lg text-muted-foreground">Here's what's happening today</p>
+      </div>
+
+      {/* Top Row: Pet/XP + Stats */}
+      <div className="grid lg:grid-cols-12 gap-6">
+        {/* Pet & XP */}
+        <Card className="lg:col-span-4 p-6 glass-card">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-gradient-primary p-1 animate-glow">
+                <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
+                  <span className="text-5xl">{AVATAR_STAGES[avatarStage]}</span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
               </div>
-              <p className="text-3xl font-bold">{stat.value}</p>
+              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-accent">
+                Level {profile.level}
+              </Badge>
+            </div>
+            <div className="text-center">
+              <div className="text-sm text-muted-foreground">
+                {profile.xp} / {profile.level * 100} XP
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {profile.total_lifetime_xp} Total XP
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Quick Stats */}
+        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link to="/tasks">
+            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <Target className="w-8 h-8 text-primary" />
+                <div className="text-2xl font-bold">{profile.xp}</div>
+                <div className="text-xs text-muted-foreground">Current XP</div>
+              </div>
             </Card>
+          </Link>
+          <Link to="/dashboard">
+            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <TrendingUp className="w-8 h-8 text-accent" />
+                <div className="text-2xl font-bold">{profile.streak}</div>
+                <div className="text-xs text-muted-foreground">Day Streak</div>
+              </div>
+            </Card>
+          </Link>
+          <Link to="/rooms">
+            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <Users className="w-8 h-8 text-primary" />
+                <div className="text-2xl font-bold">{liveRooms.length}</div>
+                <div className="text-xs text-muted-foreground">Live Rooms</div>
+              </div>
+            </Card>
+          </Link>
+          <Link to="/community">
+            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <Sparkles className="w-8 h-8 text-accent" />
+                <div className="text-2xl font-bold">{recentPosts.length}</div>
+                <div className="text-xs text-muted-foreground">New Posts</div>
+              </div>
+            </Card>
+          </Link>
+        </div>
+      </div>
+
+      {/* Daily AI Question */}
+      {dailyQuestion && (
+        <Card className="p-6 glass-card border-2 border-accent/20">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-accent flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-gradient-accent">Daily Question</Badge>
+                <Badge variant="secondary">+10 XP</Badge>
+              </div>
+              <h3 className="font-semibold text-lg mb-2">{dailyQuestion.title}</h3>
+              <p className="text-sm text-muted-foreground mb-3">{dailyQuestion.content}</p>
+              <Link to="/community">
+                <Button size="sm" className="bg-gradient-accent">
+                  Answer & Earn XP
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Live Focus Rooms */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Zap className="w-6 h-6 text-primary" />
+            Live Focus Rooms
+          </h2>
+          <Link to="/rooms">
+            <Button variant="outline" size="sm">View All</Button>
+          </Link>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {liveRooms.map((room) => (
+            <Link key={room.id} to="/rooms">
+              <Card className="p-4 glass-card hover-lift cursor-pointer">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="text-xs">{room.subject}</Badge>
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {room.duration_minutes}m
+                  </Badge>
+                </div>
+                <h3 className="font-semibold mb-2">{room.title}</h3>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  <span>Active</span>
+                </div>
+              </Card>
+            </Link>
+          ))}
+          {liveRooms.length === 0 && (
+            <Card className="p-6 glass-card col-span-full text-center">
+              <p className="text-muted-foreground">No active rooms right now. Be the first to start one!</p>
+              <Link to="/rooms">
+                <Button className="mt-4 bg-gradient-primary">Create Room</Button>
+              </Link>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Community Activity */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-accent" />
+            Recent Community Posts
+          </h2>
+          <Link to="/community">
+            <Button variant="outline" size="sm">View All</Button>
+          </Link>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          {recentPosts.map((post) => (
+            <Link key={post.id} to="/community">
+              <Card className="p-4 glass-card hover-lift cursor-pointer">
+                <Badge className="mb-2 text-xs">{post.category}</Badge>
+                <h3 className="font-semibold mb-2 line-clamp-2">{post.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
+                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    👤 {post.username}
+                  </span>
+                  <span>❤️ {post.likes}</span>
+                </div>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <Card className="glass-card p-8 shadow-xl hover-lift">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              Live Focus Rooms
-            </h2>
-            <Badge className="bg-green-500/20 text-green-600 border-green-500/50 animate-pulse">
-              {liveRooms.length} Active
-            </Badge>
-          </div>
-          {liveRooms.length > 0 ? (
-            <div className="space-y-4 mb-6">
-              {liveRooms.map((room) => (
-                <Link key={room.id} to="/rooms">
-                  <Card className="glass-card p-5 hover-lift group">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-lg group-hover:gradient-text transition-all">{room.title}</h3>
-                      <div className="flex items-center gap-2 text-green-500 text-sm font-medium">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        Live
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {room.duration_minutes}m
-                      </span>
-                      <Badge variant="secondary" className="rounded-full">{room.subject}</Badge>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center py-8">No active rooms right now</p>
-          )}
+      {/* Quick Actions */}
+      <Card className="p-6 glass-card">
+        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <div className="grid md:grid-cols-3 gap-4">
           <Link to="/rooms">
-            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-              Browse All Rooms
+            <Button className="w-full h-16 text-base bg-gradient-primary">
+              <Rocket className="w-5 h-5 mr-2" />
+              Join Focus Room
             </Button>
           </Link>
-        </Card>
-
-        <Card className="glass-card p-8 shadow-xl hover-lift">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center animate-glow">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold">Quick Actions</h2>
-          </div>
-          <div className="space-y-3">
-            {[
-              { to: "/rooms", icon: Users, label: "Join a Focus Room", gradient: "from-purple-500 to-pink-500" },
-              { to: "/tasks", icon: Target, label: "Create Study Plan", gradient: "from-pink-500 to-orange-500" },
-              { to: "/social", icon: Sparkles, label: "Join Convo Rooms", gradient: "from-cyan-500 to-blue-500" },
-              { to: "/dashboard", icon: TrendingUp, label: "View Dashboard", gradient: "from-green-500 to-teal-500" }
-            ].map((action, idx) => (
-              <Link key={idx} to={action.to}>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-left glass-card border-2 hover:border-primary/50 hover:shadow-lg transition-all group rounded-2xl p-6"
-                >
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
-                    <action.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="font-medium">{action.label}</span>
-                </Button>
-              </Link>
-            ))}
-          </div>
-        </Card>
-      </div>
+          <Link to="/tasks">
+            <Button variant="outline" className="w-full h-16 text-base">
+              <Target className="w-5 h-5 mr-2" />
+              Manage Tasks
+            </Button>
+          </Link>
+          <Link to="/community">
+            <Button variant="outline" className="w-full h-16 text-base">
+              <BookOpen className="w-5 h-5 mr-2" />
+              Browse Community
+            </Button>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 };

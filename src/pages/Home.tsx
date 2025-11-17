@@ -240,9 +240,9 @@ const Home = () => {
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Row: Profile + Leaderboard Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Left Column: Profile + My Classes */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:col-span-3">
           {/* Profile Hero Section - Compact */}
           <Card className="glass-card p-4 shadow-elegant relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
@@ -390,7 +390,7 @@ const Home = () => {
         </div>
 
         {/* Right: Leaderboard - Top 5 */}
-        <Card className="glass-card p-4 shadow-elegant">
+        <Card className="glass-card p-4 shadow-elegant lg:col-span-2">
           <div className="flex items-center gap-2 mb-3">
             <Trophy className="w-5 h-5 text-[#B7D8B5]" />
             <h2 className="text-lg font-bold">Top 5 This Week</h2>

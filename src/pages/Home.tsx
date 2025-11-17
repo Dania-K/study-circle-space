@@ -86,8 +86,31 @@ const Home = () => {
       .from('profiles')
       .select('name, username, total_lifetime_xp, level')
       .order('total_lifetime_xp', { ascending: false })
-      .limit(5);
-    setLeaderboard(data || []);
+      .limit(20);
+    
+    // Dummy users with realistic names
+    const dummyUsers = [
+      { name: "Maya Carter", username: "maya_c", total_lifetime_xp: 890, level: 8, isDummy: true },
+      { name: "Ibrahim Khan", username: "ibrahim_k", total_lifetime_xp: 820, level: 7, isDummy: true },
+      { name: "Sofia Martinez", username: "sofia_m", total_lifetime_xp: 780, level: 7, isDummy: true },
+      { name: "Lily Chen", username: "lily_c", total_lifetime_xp: 750, level: 7, isDummy: true },
+      { name: "Jacob Thompson", username: "jacob_t", total_lifetime_xp: 690, level: 6, isDummy: true },
+      { name: "Aisha Patel", username: "aisha_p", total_lifetime_xp: 650, level: 6, isDummy: true },
+      { name: "Ethan Rodriguez", username: "ethan_r", total_lifetime_xp: 620, level: 6, isDummy: true },
+      { name: "Zara Williams", username: "zara_w", total_lifetime_xp: 580, level: 5, isDummy: true },
+      { name: "Noah Kim", username: "noah_k", total_lifetime_xp: 540, level: 5, isDummy: true },
+      { name: "Emma Johnson", username: "emma_j", total_lifetime_xp: 500, level: 5, isDummy: true },
+      { name: "Liam O'Brien", username: "liam_o", total_lifetime_xp: 460, level: 4, isDummy: true },
+      { name: "Olivia Brown", username: "olivia_b", total_lifetime_xp: 420, level: 4, isDummy: true },
+    ];
+    
+    // Combine real users first, then dummy users
+    const realUsers = (data || []).map(u => ({ ...u, isDummy: false }));
+    const combined = [...realUsers, ...dummyUsers]
+      .sort((a, b) => (b.total_lifetime_xp || 0) - (a.total_lifetime_xp || 0))
+      .slice(0, 15);
+    
+    setLeaderboard(combined);
   };
 
   const loadStats = async () => {
@@ -178,96 +201,138 @@ const Home = () => {
   const petStage = Math.min(Math.floor(pet.xp / 20), 4);
   const petEmoji = PET_TYPES[petType as keyof typeof PET_TYPES]?.[petStage] || "🐣";
   const name = profile.name || profile.username || "Student";
-  const xpForNextLevel = (profile.level * 100);
-  const xpProgress = ((profile.xp) / xpForNextLevel) * 100;
+  const nextLevelXP = (profile.level * 100);
+  const xpProgress = ((profile.xp) / nextLevelXP);
   const userRank = leaderboard.findIndex(u => (u.name === profile.name || u.username === profile.username)) + 1;
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center gap-4">
-          <h1 className="text-3xl sm:text-4xl font-bold">Welcome back, {name}! 👋</h1>
-          <Button variant="outline" size="sm" onClick={() => setIsEditProfileOpen(true)}>
-            <Edit className="w-4 h-4 mr-1" />
-            Edit
-          </Button>
-        </div>
-        <p className="text-muted-foreground">Level {profile.level} • {profile.total_lifetime_xp || 0} Total XP</p>
-        {profile?.school && <p className="text-sm text-muted-foreground">{profile.school}</p>}
-        {profile?.grade && <p className="text-sm text-muted-foreground">Grade {profile.grade}</p>}
-      </div>
+      {/* HERO SECTION: XP, Level, Streak, Pet */}
+      <Card className="glass-card p-8 sm:p-12 shadow-elegant relative overflow-hidden">
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
+        
+        <div className="relative z-10">
+          <div className="flex flex-col items-center text-center space-y-6">
+            {/* Pet + XP Ring */}
+            <div className="relative">
+              <svg className="w-40 h-40 sm:w-48 sm:h-48 -rotate-90">
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="hsl(var(--muted))"
+                  strokeWidth="12"
+                  fill="none"
+                />
+                <circle
+                  cx="96"
+                  cy="96"
+                  r="88"
+                  stroke="url(#hero-gradient)"
+                  strokeWidth="12"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 88}`}
+                  strokeDashoffset={`${2 * Math.PI * 88 * (1 - xpProgress)}`}
+                  className="transition-all duration-500"
+                />
+                <defs>
+                  <linearGradient id="hero-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#B7D8B5" />
+                    <stop offset="50%" stopColor="#D6CFC4" />
+                    <stop offset="100%" stopColor="#B7D8B5" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-7xl sm:text-8xl animate-float">
+                {petEmoji}
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="glass-card p-6 space-y-6 lg:col-span-1">
-          <div className="text-center space-y-4">
-            <div className="relative inline-block">
-              <div className="text-8xl animate-float">{petEmoji}</div>
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                Level {pet.level}
+            {/* Name + School Info */}
+            <div className="space-y-2">
+              <h1 className="text-4xl sm:text-5xl font-bold gradient-text">{name}</h1>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-muted-foreground text-sm sm:text-base">
+                {profile?.school && <span>{profile.school}</span>}
+                {profile?.grade && profile?.school && <span>•</span>}
+                {profile?.grade && <span>Grade {profile.grade}</span>}
+              </div>
+            </div>
+
+            {/* Level + XP Bar */}
+            <div className="space-y-3 w-full max-w-md px-4">
+              <div className="flex items-center justify-between text-xl sm:text-2xl font-bold">
+                <span>Level {profile?.level || 1}</span>
+                <span className="text-[#B7D8B5]">{profile?.xp || 0} / {nextLevelXP} XP</span>
+              </div>
+              <Progress value={xpProgress * 100} className="h-4 shadow-lg" />
+            </div>
+
+            {/* Streak + Rank Badges */}
+            <div className="flex gap-4 sm:gap-6 flex-wrap justify-center">
+              <Badge variant="secondary" className="text-lg sm:text-2xl px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover-lift">
+                🔥 {profile?.streak || 0} Day Streak
+              </Badge>
+              <Badge variant="secondary" className="text-lg sm:text-2xl px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover-lift">
+                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                Rank #{userRank > 0 ? userRank : '-'}
               </Badge>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>XP Progress</span>
-                <span>{profile.xp}/{xpForNextLevel}</span>
+            {/* Edit Profile + Theme/Pet Selectors */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center w-full max-w-2xl pt-4">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => setIsEditProfileOpen(true)}
+                className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
+              >
+                <Edit className="w-5 h-5 mr-2" />
+                Edit Profile
+              </Button>
+              
+              <div className="flex gap-4 w-full sm:w-auto">
+                <Select value={theme} onValueChange={changeTheme}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {THEMES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Progress value={xpProgress} className="h-3" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="p-3 rounded-lg bg-secondary/50">
-                <div className="text-2xl font-bold">{profile.streak}</div>
-                <div className="text-xs text-muted-foreground">Day Streak</div>
-              </div>
-              <div className="p-3 rounded-lg bg-secondary/50">
-                <div className="text-2xl font-bold">{userRank > 0 ? `#${userRank}` : "-"}</div>
-                <div className="text-xs text-muted-foreground">Rank</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Theme
-            </label>
-            <Select value={theme} onValueChange={changeTheme}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {THEMES.map(t => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.name} - {t.desc}
-                  </SelectItem>
+            {/* Pet Selection */}
+            <div className="w-full max-w-md space-y-3">
+              <label className="text-sm font-medium flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Choose Your Study Pet
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {PETS.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => updatePetType(p.id)}
+                    className={`p-3 rounded-lg text-3xl hover:scale-110 transition-transform ${
+                      petType === p.id ? "bg-[#B7D8B5]/30 ring-2 ring-[#B7D8B5]" : "bg-secondary/30"
+                    }`}
+                    title={p.name}
+                  >
+                    {p.emoji}
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Study Pet
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {PETS.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => updatePetType(p.id)}
-                  className={`p-3 rounded-lg text-2xl hover:scale-110 transition-transform ${
-                    petType === p.id ? "bg-primary/20 ring-2 ring-primary" : "bg-secondary/30"
-                  }`}
-                  title={p.name}
-                >
-                  {p.emoji}
-                </button>
-              ))}
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
+      </Card>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="glass-card p-6 space-y-6 lg:col-span-1">
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 rounded-lg bg-secondary/50">

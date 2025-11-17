@@ -81,9 +81,124 @@ const Community = () => {
       .order('is_spotlight', { ascending: false })
       .order('created_at', { ascending: false });
     
+    // Dummy community posts with realistic student names
+    const dummyPosts: Post[] = [
+      {
+        id: 'dummy-1',
+        user_id: 'dummy-user-1',
+        username: 'Emma Rodriguez',
+        title: 'Study Tips for Chemistry Finals',
+        content: 'Anyone else struggling with balancing equations? I found that making flashcards and using the mnemonic "LEO says GER" really helps!',
+        category: 'Study Tips',
+        likes: 12,
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '11th grade',
+        school: 'Lincoln High School'
+      },
+      {
+        id: 'dummy-2',
+        user_id: 'dummy-user-2',
+        username: 'Marcus Johnson',
+        title: 'Just finished my college essay!',
+        content: 'After 6 drafts, I finally submitted my Common App essay. Feeling relieved and nervous at the same time. Good luck to everyone else applying!',
+        category: 'Wins',
+        likes: 24,
+        created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '12th grade',
+        school: 'Riverside Academy'
+      },
+      {
+        id: 'dummy-3',
+        user_id: 'dummy-user-3',
+        username: 'Aisha Patel',
+        title: 'Motivation tip that changed my study game',
+        content: 'I started using the Pomodoro technique and my productivity skyrocketed! 25 min focus, 5 min break. It actually works!',
+        category: 'Motivation',
+        likes: 18,
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '10th grade',
+        school: 'Eastside Prep'
+      },
+      {
+        id: 'dummy-4',
+        user_id: 'dummy-user-4',
+        username: 'Tyler Chen',
+        title: 'Anyone else procrastinating right now?',
+        content: 'I have a huge history project due tomorrow and I\'m on here instead of working on it. Why am I like this? 😅',
+        category: 'Struggles',
+        likes: 31,
+        created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '9th grade',
+        school: 'Valley High'
+      },
+      {
+        id: 'dummy-5',
+        user_id: 'dummy-user-5',
+        username: 'Sofia Martinez',
+        title: 'Goal: Get into AP Calc next year',
+        content: 'Working really hard to bring up my math grade so I can qualify for AP Calculus. Any tips from people who made it?',
+        category: 'Goals',
+        likes: 9,
+        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '10th grade',
+        school: 'Lincoln High School'
+      },
+      {
+        id: 'dummy-6',
+        user_id: 'dummy-user-6',
+        username: 'Jayden Williams',
+        title: 'Study playlist recommendations?',
+        content: 'Looking for some good lo-fi or instrumental music to study to. Drop your favorite playlists below!',
+        category: 'General',
+        likes: 15,
+        created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '11th grade',
+        school: 'Central High'
+      },
+      {
+        id: 'dummy-7',
+        user_id: 'dummy-user-7',
+        username: 'Priya Sharma',
+        title: 'Aced my Physics test!',
+        content: '98% on my mechanics test! All those late nights in the focus rooms paid off. This app is a game changer.',
+        category: 'Wins',
+        likes: 27,
+        created_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '12th grade',
+        school: 'Riverside Academy'
+      },
+      {
+        id: 'dummy-8',
+        user_id: 'dummy-user-8',
+        username: 'Lucas Brown',
+        title: 'How do you stay motivated during exam season?',
+        content: 'Finals are killing me. I know I need to study but I just feel so burnt out. What keeps you going?',
+        category: 'Motivation',
+        likes: 22,
+        created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        is_spotlight: false,
+        grade: '11th grade',
+        school: 'Eastside Prep'
+      }
+    ];
+    
     if (!error && data) {
-      setPosts(data);
-      const spotlight = data.find(p => p.is_spotlight);
+      // Combine real posts with dummy posts
+      const realPosts = data || [];
+      const allPosts = [...realPosts, ...dummyPosts].sort((a, b) => {
+        if (a.is_spotlight !== b.is_spotlight) return b.is_spotlight ? 1 : -1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      
+      setPosts(allPosts);
+      const spotlight = allPosts.find(p => p.is_spotlight);
       setDailyQuestion(spotlight || null);
     }
   };
@@ -95,7 +210,39 @@ const Community = () => {
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
     
-    if (!error && data) setComments(data);
+    // Add dummy comments for QOTD
+    let dummyComments: Comment[] = [];
+    if (postId === dailyQuestion?.id && dailyQuestion?.is_spotlight) {
+      dummyComments = [
+        {
+          id: 'dummy-comment-1',
+          post_id: postId,
+          user_id: 'dummy-user-9',
+          username: 'Zara Kim',
+          content: 'Breaking down big assignments into smaller chunks really helps! I also reward myself after completing each section.',
+          created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+          grade: '10th grade',
+          school: 'Valley High'
+        },
+        {
+          id: 'dummy-comment-2',
+          post_id: postId,
+          user_id: 'dummy-user-10',
+          username: 'Noah Anderson',
+          content: 'I find that studying with friends keeps me accountable. We use focus rooms together and it makes a huge difference!',
+          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          grade: '11th grade',
+          school: 'Lincoln High School'
+        }
+      ];
+    }
+    
+    if (!error && data) {
+      const allComments = [...(data || []), ...dummyComments].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+      setComments(allComments);
+    }
   };
 
   const createPost = async () => {

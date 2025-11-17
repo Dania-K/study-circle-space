@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
-import { Trophy, Sparkles, Clock, Users, CheckCircle, Palette, Trash2, Send, Edit } from "lucide-react";
+import { Trophy, Sparkles, Clock, Users, CheckCircle, Palette, Trash2, Edit } from "lucide-react";
 import { EditProfileModal } from "@/components/EditProfileModal";
 
 const PET_TYPES = {
@@ -52,8 +52,6 @@ const Home = () => {
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
   const [weeklySummary, setWeeklySummary] = useState<any>(null);
-  const [dailyQuestion, setDailyQuestion] = useState<string>("");
-  const [dailyAnswer, setDailyAnswer] = useState("");
   const [userClasses, setUserClasses] = useState<any[]>([]);
   const [newClass, setNewClass] = useState({ name: "", subject: "", teacher: "" });
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -69,7 +67,6 @@ const Home = () => {
       loadLeaderboard();
       loadStats();
       loadWeeklySummary();
-      loadDailyQuestion();
       loadUserClasses();
     }
   }, [user]);
@@ -130,52 +127,6 @@ const Home = () => {
     if (data) {
       toast({ title: "Weekly summary generated! 📊" });
       loadWeeklySummary();
-    }
-  };
-
-  const loadDailyQuestion = async () => {
-    const questions = [
-      "What study technique helped you most today?",
-      "What's one thing you learned that surprised you?",
-      "How can you improve your focus tomorrow?",
-      "What was the most challenging concept today?",
-    ];
-    const dayIndex = new Date().getDate() % questions.length;
-    setDailyQuestion(questions[dayIndex]);
-  };
-
-  const answerDailyQuestion = async () => {
-    if (!dailyAnswer.trim()) return;
-    
-    const { data: currentProfile } = await supabase
-      .from('profiles')
-      .select('xp, total_lifetime_xp, level')
-      .eq('id', user!.id)
-      .single();
-
-    if (currentProfile) {
-      const newXP = currentProfile.xp + 10;
-      const newTotalXP = (currentProfile.total_lifetime_xp || 0) + 10;
-      const newLevel = Math.floor(newTotalXP / 100) + 1;
-
-      await supabase
-        .from('profiles')
-        .update({ xp: newXP, total_lifetime_xp: newTotalXP, level: newLevel })
-        .eq('id', user!.id);
-
-      if (pet) {
-        const petNewXP = pet.xp + 10;
-        const petNewLevel = Math.floor(petNewXP / 20) + 1;
-        await supabase
-          .from('pets')
-          .update({ xp: petNewXP, level: petNewLevel })
-          .eq('owner_id', user!.id);
-      }
-
-      toast({ title: "Great answer! +10 XP 🌟" });
-      setDailyAnswer("");
-      loadProfile();
-      loadPet();
     }
   };
 
@@ -318,25 +269,6 @@ const Home = () => {
         </Card>
 
         <Card className="glass-card p-6 space-y-6 lg:col-span-1">
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Question of the Day
-            </h3>
-            <p className="text-sm text-muted-foreground italic">"{dailyQuestion}"</p>
-            <div className="flex gap-2">
-              <Input
-                value={dailyAnswer}
-                onChange={(e) => setDailyAnswer(e.target.value)}
-                placeholder="Your answer..."
-                onKeyPress={(e) => e.key === 'Enter' && answerDailyQuestion()}
-              />
-              <Button size="icon" onClick={answerDailyQuestion}>
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 rounded-lg bg-secondary/50">
               <CheckCircle className="w-6 h-6 mx-auto mb-1 text-primary" />

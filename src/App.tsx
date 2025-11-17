@@ -8,10 +8,8 @@ import Landing from "./pages/Landing";
 import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import Tasks from "./pages/Tasks";
-import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
 import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { FloatingAIHelper } from "./components/FloatingAIHelper";
 import { useTheme } from "./hooks/useTheme";
@@ -27,8 +25,8 @@ const AppContent = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route element={<Layout />}>
-          <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Home />} />
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/community" element={<Community />} />

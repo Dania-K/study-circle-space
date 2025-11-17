@@ -27,19 +27,19 @@ const Auth = () => {
         });
         if (error) throw error;
         toast({ title: "Welcome back!" });
-        navigate("/home");
+        navigate("/dashboard");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { name },
-            emailRedirectTo: `${window.location.origin}/home`,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
           },
         });
         if (error) throw error;
         toast({ title: "Account created! Redirecting..." });
-        navigate("/home");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({

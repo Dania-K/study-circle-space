@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface CreateRoomDialogProps {
   open: boolean;
@@ -21,29 +22,106 @@ export const CreateRoomDialog = ({ open, onOpenChange, onRoomCreated }: CreateRo
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("25");
+  const [isCreating, setIsCreating] = useState(false);
+  const [errors, setErrors] = useState<{ title?: string; subject?: string }>({});
+
+  const validateForm = () => {
+    const newErrors: { title?: string; subject?: string } = {};
+    
+    if (!title.trim()) {
+      newErrors.title = "Room title is required";
+    }
+    
+    if (!subject.trim()) {
+      newErrors.subject = "Subject is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const createRoom = async () => {
-    if (!title || !subject || !user) return;
+    // Client-side validation
+    if (!validateForm()) {
+      toast({ 
+        title: "Missing required fields", 
+        description: "Please fill in all required fields",
+        variant: "destructive" 
+      });
+      return;
+    }
 
-    const { error } = await supabase.from('focus_rooms').insert({
-      title,
-      subject,
-      description,
-      duration_minutes: parseInt(duration),
-      host_id: user.id,
-      in_session: false,
-    });
+    if (!user) {
+      toast({ 
+        title: "Please sign in", 
+        description: "You need to be logged in to create a room",
+        variant: "destructive" 
+      });
+      return;
+    }
 
-    if (!error) {
-      toast({ title: "Room created successfully!" });
+    setIsCreating(true);
+
+    try {
+      // Create the room
+      const { data: roomData, error: roomError } = await supabase
+        .from('focus_rooms')
+        .insert({
+          title: title.trim(),
+          subject: subject.trim(),
+          description: description.trim() || null,
+          duration_minutes: parseInt(duration),
+          host_id: user.id,
+          in_session: false,
+        })
+        .select()
+        .single();
+
+      if (roomError) {
+        console.error('Room creation error:', roomError);
+        throw new Error(roomError.message || "Failed to create room");
+      }
+
+      if (!roomData) {
+        throw new Error("Room created but no data returned");
+      }
+
+      // Create initial session for the host
+      const { error: sessionError } = await supabase
+        .from('sessions')
+        .insert({
+          room_id: roomData.id,
+          user_id: user.id,
+          task_text: "",
+          mood: null,
+          start_time: new Date().toISOString(),
+        });
+
+      if (sessionError) {
+        console.warn('Session creation warning:', sessionError);
+        // Don't fail the whole operation if session creation fails
+      }
+
+      toast({ title: "Room created successfully! 🎉" });
+      
+      // Reset form
       setTitle("");
       setSubject("");
       setDescription("");
       setDuration("25");
+      setErrors({});
+      
       onOpenChange(false);
       onRoomCreated();
-    } else {
-      toast({ title: "Error creating room", variant: "destructive" });
+    } catch (error: any) {
+      console.error('Create room error:', error);
+      toast({ 
+        title: "Error creating room", 
+        description: error.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -55,13 +133,31 @@ export const CreateRoomDialog = ({ open, onOpenChange, onRoomCreated }: CreateRo
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Room Title</label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Study session name..." />
+            <label className="text-sm font-medium">Room Title *</label>
+            <Input 
+              value={title} 
+              onChange={e => {
+                setTitle(e.target.value);
+                setErrors(prev => ({ ...prev, title: undefined }));
+              }} 
+              placeholder="Study session name..." 
+              className={errors.title ? "border-destructive" : ""}
+            />
+            {errors.title && <p className="text-xs text-destructive mt-1">{errors.title}</p>}
           </div>
           
           <div>
-            <label className="text-sm font-medium">Subject</label>
-            <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Math, Science, etc..." />
+            <label className="text-sm font-medium">Subject *</label>
+            <Input 
+              value={subject} 
+              onChange={e => {
+                setSubject(e.target.value);
+                setErrors(prev => ({ ...prev, subject: undefined }));
+              }} 
+              placeholder="Math, Science, etc..." 
+              className={errors.subject ? "border-destructive" : ""}
+            />
+            {errors.subject && <p className="text-xs text-destructive mt-1">{errors.subject}</p>}
           </div>
           
           <div>
@@ -88,8 +184,15 @@ export const CreateRoomDialog = ({ open, onOpenChange, onRoomCreated }: CreateRo
             />
           </div>
 
-          <Button onClick={createRoom} className="w-full" disabled={!title || !subject}>
-            Create Room
+          <Button onClick={createRoom} className="w-full" disabled={isCreating}>
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Room"
+            )}
           </Button>
         </div>
       </DialogContent>

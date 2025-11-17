@@ -28,11 +28,11 @@ const AppContent = () => {
         <Route path="/auth" element={<Auth />} />
         <Route element={<Layout />}>
           <Route path="/home" element={<Home />} />
+          <Route path="/dashboard" element={<Home />} />
+          <Route path="/profile" element={<Home />} />
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/community" element={<Community />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

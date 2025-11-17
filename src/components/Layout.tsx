@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { NavLink } from "./NavLink";
-import { Home, ListTodo, LayoutDashboard, Target, Users, Calendar, Trophy, MessageCircle } from "lucide-react";
+import { ListTodo, LayoutDashboard, Users, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -22,12 +22,12 @@ export const Layout = () => {
             
             <div className="flex items-center gap-1">
               <NavLink
-                to="/home"
+                to="/dashboard"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
-                <Home className="w-4 h-4" />
-                <span className="hidden sm:inline">Home</span>
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Dashboard</span>
               </NavLink>
               <NavLink
                 to="/rooms"
@@ -52,14 +52,6 @@ export const Layout = () => {
               >
                 <ListTodo className="w-4 h-4" />
                 <span className="hidden sm:inline">Tasks</span>
-              </NavLink>
-              <NavLink
-                to="/profile"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                activeClassName="bg-primary/10 text-primary font-medium"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">Profile</span>
               </NavLink>
               {user && (
                 <Button variant="outline" size="sm" onClick={signOut} className="ml-2">

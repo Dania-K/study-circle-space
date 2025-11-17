@@ -142,7 +142,18 @@ const Home = () => {
       .eq('week_start', weekStart.toISOString().split('T')[0])
       .maybeSingle();
     
-    setWeeklySummary(data);
+    // If no real summary exists, show an intriguing dummy summary
+    if (!data) {
+      setWeeklySummary({
+        summary_text: "You're off to an incredible start this week! Your focus during study sessions has been exceptional, and your pet is thriving alongside you. Keep up the momentum—your consistency is building the foundation for long-term success. Remember, every completed task and focus session brings you closer to your goals. The community is noticing your dedication! 🌟",
+        tasks_completed: 12,
+        focus_minutes: 287,
+        xp_gained: 450,
+        isDummy: true
+      });
+    } else {
+      setWeeklySummary(data);
+    }
   };
 
   const generateWeeklySummary = async () => {
@@ -428,24 +439,39 @@ const Home = () => {
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-semibold">AI Weekly Summary</h3>
+            <h3 className="font-semibold flex items-center justify-between">
+              <span>AI Weekly Summary</span>
+              {weeklySummary?.isDummy && (
+                <Badge variant="outline" className="text-xs">Preview</Badge>
+              )}
+            </h3>
             {weeklySummary ? (
-              <div className="p-4 rounded-lg bg-secondary/30 text-sm">
-                <p className="text-muted-foreground">{weeklySummary.summary_text}</p>
-                <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="font-bold">{weeklySummary.tasks_completed}</div>
+              <div className="p-4 rounded-lg bg-gradient-to-br from-[#B7D8B5]/10 to-[#D6CFC4]/10 text-sm border border-[#B7D8B5]/20">
+                <p className="text-foreground leading-relaxed">{weeklySummary.summary_text}</p>
+                <div className="mt-4 pt-4 border-t border-[#B7D8B5]/30 grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.tasks_completed}</div>
                     <div className="text-xs text-muted-foreground">Tasks</div>
                   </div>
-                  <div>
-                    <div className="font-bold">{weeklySummary.focus_minutes}</div>
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.focus_minutes}</div>
                     <div className="text-xs text-muted-foreground">Minutes</div>
                   </div>
-                  <div>
-                    <div className="font-bold">{weeklySummary.xp_gained}</div>
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.xp_gained}</div>
                     <div className="text-xs text-muted-foreground">XP</div>
                   </div>
                 </div>
+                {!weeklySummary.isDummy && (
+                  <Button 
+                    onClick={generateWeeklySummary} 
+                    size="sm" 
+                    variant="outline"
+                    className="w-full mt-3"
+                  >
+                    Regenerate Summary
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="text-center py-6">

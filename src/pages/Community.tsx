@@ -371,6 +371,25 @@ const Community = () => {
           </Button>
         </div>
 
+        {dailyQuestion && (
+          <Card className="p-8 glass-card border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-6 h-6 text-primary fill-primary" />
+              <h2 className="text-2xl font-bold">Question of the Day</h2>
+            </div>
+            <h3 className="text-xl font-semibold mb-3">{dailyQuestion.title}</h3>
+            <p className="text-muted-foreground mb-4">{dailyQuestion.content}</p>
+            <Button 
+              onClick={() => setSelectedPost(dailyQuestion)}
+              variant="outline"
+              className="gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Join Discussion
+            </Button>
+          </Card>
+        )}
+
         <div className="grid gap-4">
           {posts.map(post => (
             <Card

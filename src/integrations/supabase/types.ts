@@ -45,24 +45,30 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          grade: string | null
           id: string
           post_id: string
+          school: string | null
           user_id: string
           username: string
         }
         Insert: {
           content: string
           created_at?: string
+          grade?: string | null
           id?: string
           post_id: string
+          school?: string | null
           user_id: string
           username: string
         }
         Update: {
           content?: string
           created_at?: string
+          grade?: string | null
           id?: string
           post_id?: string
+          school?: string | null
           user_id?: string
           username?: string
         }
@@ -73,9 +79,11 @@ export type Database = {
           category: string
           content: string
           created_at: string
+          grade: string | null
           id: string
           is_spotlight: boolean
           likes: number
+          school: string | null
           title: string
           user_id: string
           username: string
@@ -84,9 +92,11 @@ export type Database = {
           category: string
           content: string
           created_at?: string
+          grade?: string | null
           id?: string
           is_spotlight?: boolean
           likes?: number
+          school?: string | null
           title: string
           user_id: string
           username: string
@@ -95,9 +105,11 @@ export type Database = {
           category?: string
           content?: string
           created_at?: string
+          grade?: string | null
           id?: string
           is_spotlight?: boolean
           likes?: number
+          school?: string | null
           title?: string
           user_id?: string
           username?: string

@@ -23,6 +23,8 @@ interface Post {
   likes: number;
   created_at: string;
   is_spotlight: boolean;
+  grade?: string | null;
+  school?: string | null;
 }
 
 interface Comment {
@@ -32,6 +34,8 @@ interface Comment {
   username: string;
   content: string;
   created_at: string;
+  grade?: string | null;
+  school?: string | null;
 }
 
 const CATEGORIES = ["Motivation", "Study Tips", "Goals", "Struggles", "Wins", "General"];
@@ -106,6 +110,8 @@ const Community = () => {
     const { error } = await supabase.from('community_posts').insert({
       user_id: user.id,
       username: profile?.name || profile?.username || 'Anonymous',
+      grade: profile?.grade || null,
+      school: profile?.school || null,
       title: newPost.title,
       content: newPost.content,
       category: newPost.category,
@@ -186,6 +192,8 @@ const Community = () => {
       post_id: selectedPost.id,
       user_id: user.id,
       username: profile?.name || profile?.username || 'Anonymous',
+      grade: profile?.grade || null,
+      school: profile?.school || null,
       content: newComment
     });
 
@@ -215,11 +223,18 @@ const Community = () => {
             )}
             <Badge variant="secondary" className="mb-4">{selectedPost.category}</Badge>
             <h1 className="text-3xl font-bold mb-4">{selectedPost.title}</h1>
-            <div className="flex items-center gap-3 mb-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 mb-6 text-sm">
               <Avatar className="w-8 h-8 bg-primary/20" />
-              <span>{selectedPost.username}</span>
-              <span>•</span>
-              <span>{new Date(selectedPost.created_at).toLocaleDateString()}</span>
+              <div className="flex flex-col">
+                <span className="font-medium">{selectedPost.username}</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {selectedPost.school && <span>{selectedPost.school}</span>}
+                  {selectedPost.grade && selectedPost.school && <span>•</span>}
+                  {selectedPost.grade && <span>Grade {selectedPost.grade}</span>}
+                  {(selectedPost.school || selectedPost.grade) && <span>•</span>}
+                  <span>{new Date(selectedPost.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
             <p className="text-foreground mb-6 whitespace-pre-wrap">{selectedPost.content}</p>
             <div className="flex items-center gap-4">
@@ -250,14 +265,20 @@ const Community = () => {
               <div className="space-y-4">
                 {comments.map(comment => (
                   <div key={comment.id} className="p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Avatar className="w-6 h-6 bg-primary/20" />
-                      <span className="text-sm font-medium">{comment.username}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </span>
+                    <div className="flex flex-col gap-1 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6 bg-primary/20" />
+                        <span className="text-sm font-medium">{comment.username}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground ml-8">
+                        {comment.school && <span>{comment.school}</span>}
+                        {comment.grade && comment.school && <span>•</span>}
+                        {comment.grade && <span>Grade {comment.grade}</span>}
+                        {(comment.school || comment.grade) && <span>•</span>}
+                        <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                      </div>
                     </div>
-                    <p className="text-sm">{comment.content}</p>
+                    <p className="text-sm ml-8">{comment.content}</p>
                   </div>
                 ))}
               </div>
@@ -375,7 +396,14 @@ const Community = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Avatar className="w-6 h-6 bg-primary/20" />
-                      <span>{post.username}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm">{post.username}</span>
+                        <div className="flex items-center gap-1 text-xs">
+                          {post.school && <span>{post.school}</span>}
+                          {post.grade && post.school && <span>•</span>}
+                          {post.grade && <span>Grade {post.grade}</span>}
+                        </div>
+                      </div>
                     </div>
                     <span>•</span>
                     <span>{new Date(post.created_at).toLocaleDateString()}</span>

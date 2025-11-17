@@ -86,10 +86,13 @@ const Landing = () => {
           </Card>
 
           <Card className="p-8 text-center hover-lift glass-card">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-warm flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#B7D8B5' }}>
               <Trophy className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold mb-2">Gamified Motivation</h3>
+            <h3 className="text-xl font-bold mb-2 flex items-center justify-center gap-2">
+              <Trophy className="w-5 h-5" style={{ color: '#B7D8B5' }} />
+              Gamified Motivation
+            </h3>
             <p className="text-muted-foreground">
               Earn XP, level up your pet, unlock badges, and track your progress on the leaderboard
             </p>

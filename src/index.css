@@ -8,34 +8,34 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Study Room Journal Theme */
-    --background: 48 40% 96%;  /* Soft cream #FFF8EA */
-    --foreground: 0 0% 31%;  /* Slate gray #4F4F4F */
+    /* Study Room Journal Theme - Updated Palette */
+    --background: 42 60% 97%; /* #FFF8EA soft cream */
+    --foreground: 0 0% 31%; /* #4F4F4F slate gray */
 
-    --card: 0 0% 99%;
+    --card: 42 60% 97%;
     --card-foreground: 0 0% 31%;
 
-    --popover: 0 0% 99%;
+    --popover: 42 60% 97%;
     --popover-foreground: 0 0% 31%;
 
-    --primary: 120 18% 60%;  /* Pastel green #B7D8B5 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 120 25% 82%; /* #B7D8B5 pastel green */
+    --primary-foreground: 0 0% 31%;
 
-    --secondary: 30 20% 84%;  /* Pastel taupe #D6CFC4 */
+    --secondary: 30 28% 84%; /* #D6CFC4 pastel taupe */
     --secondary-foreground: 0 0% 31%;
 
-    --muted: 30 20% 84%;
+    --muted: 30 28% 84%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 0 42% 55%;  /* Muted burgundy #A44A4A */
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 42% 55%; /* #A44A4A muted burgundy */
+    --accent-foreground: 42 60% 97%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 0 0% 98%;
 
     --border: 30 20% 88%;
     --input: 30 20% 88%;
-    --ring: 120 18% 60%;
+    --ring: 120 25% 82%;
 
     --radius: 1rem;
     

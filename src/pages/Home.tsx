@@ -10,7 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
-import { Trophy, Sparkles, Clock, Users, CheckCircle, Palette, Trash2, Send } from "lucide-react";
+import { Trophy, Sparkles, Clock, Users, CheckCircle, Palette, Trash2, Send, Edit } from "lucide-react";
+import { EditProfileModal } from "@/components/EditProfileModal";
 
 const PET_TYPES = {
   chick: ["🥚", "🐣", "🐥", "🐦", "🦅"],
@@ -55,6 +56,7 @@ const Home = () => {
   const [dailyAnswer, setDailyAnswer] = useState("");
   const [userClasses, setUserClasses] = useState<any[]>([]);
   const [newClass, setNewClass] = useState({ name: "", subject: "", teacher: "" });
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -232,8 +234,16 @@ const Home = () => {
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-bold">Welcome back, {name}! 👋</h1>
+        <div className="flex items-center justify-center gap-4">
+          <h1 className="text-3xl sm:text-4xl font-bold">Welcome back, {name}! 👋</h1>
+          <Button variant="outline" size="sm" onClick={() => setIsEditProfileOpen(true)}>
+            <Edit className="w-4 h-4 mr-1" />
+            Edit
+          </Button>
+        </div>
         <p className="text-muted-foreground">Level {profile.level} • {profile.total_lifetime_xp || 0} Total XP</p>
+        {profile?.school && <p className="text-sm text-muted-foreground">{profile.school}</p>}
+        {profile?.grade && <p className="text-sm text-muted-foreground">Grade {profile.grade}</p>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -451,6 +461,11 @@ const Home = () => {
           </div>
         </Card>
       </div>
+
+      <EditProfileModal 
+        open={isEditProfileOpen} 
+        onOpenChange={setIsEditProfileOpen}
+      />
     </div>
   );
 };

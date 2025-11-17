@@ -58,18 +58,24 @@ export const FloatingAIHelper = () => {
 
   if (!isOpen) {
     return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-primary shadow-xl hover:shadow-2xl hover:scale-110 transition-all z-50 animate-pulse-soft"
-      >
-        <Sparkles className="w-6 h-6" />
-      </Button>
+      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+        <div className="bg-[#B7D8B5] text-[#4F4F4F] px-3 py-2 rounded-lg shadow-lg text-sm font-medium animate-pulse">
+          Click here for AI HW help!
+        </div>
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="h-16 w-16 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all"
+          style={{ backgroundColor: '#B7D8B5' }}
+        >
+          <Sparkles className="w-6 h-6 text-white" />
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-2xl z-50 flex flex-col animate-slide-up border-2 border-primary/20">
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-primary text-white rounded-t-lg">
+    <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-2xl z-50 flex flex-col animate-slide-up border-2" style={{ borderColor: '#B7D8B5' }}>
+      <div className="flex items-center justify-between p-4 border-b text-white rounded-t-lg" style={{ backgroundColor: '#B7D8B5' }}>
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5" />
           <h3 className="font-semibold">AI Study Helper</h3>

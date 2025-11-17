@@ -232,10 +232,12 @@ export type Database = {
         Row: {
           avatar_stage: number | null
           created_at: string
+          grade: string | null
           id: string
           last_activity: string | null
           level: number
           name: string | null
+          school: string | null
           streak: number
           total_lifetime_xp: number | null
           username: string | null
@@ -244,10 +246,12 @@ export type Database = {
         Insert: {
           avatar_stage?: number | null
           created_at?: string
+          grade?: string | null
           id: string
           last_activity?: string | null
           level?: number
           name?: string | null
+          school?: string | null
           streak?: number
           total_lifetime_xp?: number | null
           username?: string | null
@@ -256,10 +260,12 @@ export type Database = {
         Update: {
           avatar_stage?: number | null
           created_at?: string
+          grade?: string | null
           id?: string
           last_activity?: string | null
           level?: number
           name?: string | null
+          school?: string | null
           streak?: number
           total_lifetime_xp?: number | null
           username?: string | null

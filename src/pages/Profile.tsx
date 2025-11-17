@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 import { Palette, Sparkles } from "lucide-react";
 
 const THEMES = [
@@ -30,6 +31,7 @@ const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, changeTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
   const [selectedTheme, setSelectedTheme] = useState("light");
   const [selectedPet, setSelectedPet] = useState("chick");
@@ -59,9 +61,9 @@ const Profile = () => {
     }
   };
 
-  const saveTheme = async (theme: string) => {
-    setSelectedTheme(theme);
-    localStorage.setItem('user_theme', theme);
+  const saveTheme = async (themeName: string) => {
+    setSelectedTheme(themeName);
+    changeTheme(themeName);
     toast({ title: "Theme updated! 🎨" });
   };
 

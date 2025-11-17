@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Trash2, Sparkles, Palette } from "lucide-react";
+import { Loader2, Sparkles, Palette } from "lucide-react";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -52,13 +52,10 @@ export const EditProfileModal = ({
   const [school, setSchool] = useState("");
   const [grade, setGrade] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [userClasses, setUserClasses] = useState<any[]>([]);
-  const [newClass, setNewClass] = useState({ name: "", subject: "" });
 
   useEffect(() => {
     if (open && user) {
       loadProfile();
-      loadUserClasses();
     }
   }, [open, user]);
 
@@ -76,38 +73,6 @@ export const EditProfileModal = ({
       setSchool(data.school || "");
       setGrade(data.grade || "");
     }
-  };
-
-  const loadUserClasses = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('user_classes')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    setUserClasses(data || []);
-  };
-
-  const addClass = async () => {
-    if (!user || !newClass.name.trim() || !newClass.subject.trim()) return;
-
-    const { error } = await supabase.from('user_classes').insert({
-      user_id: user.id,
-      class_name: newClass.name,
-      subject: newClass.subject,
-    });
-
-    if (!error) {
-      setNewClass({ name: "", subject: "" });
-      loadUserClasses();
-      toast({ title: "Class added! 📚" });
-    }
-  };
-
-  const deleteClass = async (classId: string) => {
-    await supabase.from('user_classes').delete().eq('id', classId);
-    loadUserClasses();
-    toast({ title: "Class removed" });
   };
 
   const saveProfile = async () => {
@@ -143,7 +108,7 @@ export const EditProfileModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
@@ -224,44 +189,6 @@ export const EditProfileModal = ({
                   {p.emoji}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Classes Management */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground">My Classes</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {userClasses.map(cls => (
-                <div key={cls.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{cls.class_name}</div>
-                    <div className="text-xs text-muted-foreground">{cls.subject}</div>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deleteClass(cls.id)}
-                    className="h-8 w-8"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <Input
-                placeholder="Class name..."
-                value={newClass.name}
-                onChange={e => setNewClass({ ...newClass, name: e.target.value })}
-              />
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Subject..."
-                  value={newClass.subject}
-                  onChange={e => setNewClass({ ...newClass, subject: e.target.value })}
-                />
-                <Button onClick={addClass}>Add</Button>
-              </div>
             </div>
           </div>
 

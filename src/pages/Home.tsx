@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -261,36 +262,36 @@ const Home = () => {
           </div>
         </Card>
 
-        {/* Right: Leaderboard */}
+        {/* Right: Leaderboard - Wider and Cleaner */}
         <Card className="glass-card p-6 shadow-elegant lg:col-span-2">
           <div className="space-y-4">
-            <h3 className="font-bold text-2xl flex items-center gap-2">
+            <h3 className="font-bold text-2xl flex items-center gap-2 pb-2 border-b">
               <Trophy className="w-6 h-6 text-[#B7D8B5]" />
               Leaderboard
             </h3>
-            <div className="space-y-2.5 max-h-[600px] overflow-y-auto">
+            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
               {leaderboard.slice(0, 12).map((user, idx) => (
                 <div 
                   key={idx} 
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
                     idx < 3 
-                      ? 'bg-gradient-to-r from-[#B7D8B5]/20 to-transparent border border-[#B7D8B5]/30' 
+                      ? 'bg-gradient-to-r from-[#B7D8B5]/20 to-transparent border-2 border-[#B7D8B5]/30' 
                       : 'bg-secondary/30 hover:bg-secondary/50'
                   }`}
                 >
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold ${
-                    idx === 0 ? 'bg-yellow-500/20 text-yellow-600' :
-                    idx === 1 ? 'bg-gray-400/20 text-gray-600' :
-                    idx === 2 ? 'bg-orange-500/20 text-orange-600' :
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0 ${
+                    idx === 0 ? 'bg-yellow-500/20 text-yellow-600 text-xl' :
+                    idx === 1 ? 'bg-gray-400/20 text-gray-600 text-xl' :
+                    idx === 2 ? 'bg-orange-500/20 text-orange-600 text-xl' :
                     'bg-primary/20 text-primary'
                   }`}>
                     {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{user.name || user.username}</div>
-                    <div className="text-xs text-muted-foreground">{user.total_lifetime_xp} XP</div>
+                    <div className="text-base font-semibold truncate">{user.name || user.username}</div>
+                    <div className="text-sm text-muted-foreground">{user.total_lifetime_xp.toLocaleString()} XP</div>
                   </div>
-                  <Badge variant="secondary" className="text-xs">L{user.level}</Badge>
+                  <Badge variant="secondary" className="text-sm px-2 py-1">L{user.level}</Badge>
                 </div>
               ))}
             </div>
@@ -301,6 +302,23 @@ const Home = () => {
       {/* Main Content Below */}
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <div className="space-y-6">
+          {/* Quick Class Selector */}
+          <Card className="glass-card p-4">
+            <div className="flex items-center gap-3">
+              <Label className="font-semibold whitespace-nowrap">Currently studying:</Label>
+              <Select>
+                <SelectTrigger className="w-full bg-background">
+                  <SelectValue placeholder="Select a class" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="math">📐 Mathematics</SelectItem>
+                  <SelectItem value="science">🔬 Science</SelectItem>
+                  <SelectItem value="english">📚 English</SelectItem>
+                  <SelectItem value="history">🏛️ History</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </Card>
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-3">
             <Card className="glass-card p-4 text-center">

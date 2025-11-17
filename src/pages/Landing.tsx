@@ -28,16 +28,9 @@ const Landing = () => {
               <Button 
                 size="lg" 
                 onClick={() => navigate("/auth")}
-                className="bg-gradient-primary hover:opacity-90"
+                className="bg-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
               >
                 Get Started <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={scrollToFeatures}
-              >
-                See Demo
               </Button>
             </div>
           </div>

@@ -1,54 +1,71 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import { Zap, Users, Target, TrendingUp, Sparkles, Clock, BookOpen, Rocket } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { Users, CheckSquare, MessageCircle, Sparkles, TrendingUp, Calendar, Target } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const PETS = [
+  { emoji: "🐣", name: "Chick", id: "chick" },
+  { emoji: "🐱", name: "Cat", id: "cat" },
+  { emoji: "🌱", name: "Sprout", id: "sprout" },
+  { emoji: "🤖", name: "Robot", id: "robot" },
+  { emoji: "🦊", name: "Fox", id: "fox" },
+];
 
 const Home = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
-  const [liveRooms, setLiveRooms] = useState<any[]>([]);
-  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [stats, setStats] = useState({ rooms: 0, posts: 0, streak: 0 });
   const [dailyQuestion, setDailyQuestion] = useState<any>(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/");
+    if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
       loadProfile();
-      loadLiveRooms();
-      loadRecentPosts();
+      loadStats();
       loadDailyQuestion();
     }
   }, [user]);
 
   const loadProfile = async () => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', user!.id).single();
-    setProfile(data);
-  };
-
-  const loadLiveRooms = async () => {
+    if (!user) return;
     const { data } = await supabase
-      .from('focus_rooms')
+      .from('profiles')
       .select('*')
-      .eq('in_session', true)
-      .limit(4);
-    setLiveRooms(data || []);
+      .eq('id', user.id)
+      .single();
+    if (data) setProfile(data);
   };
 
-  const loadRecentPosts = async () => {
-    const { data } = await supabase
+  const loadStats = async () => {
+    if (!user) return;
+    
+    const { data: rooms } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('user_id', user.id);
+
+    const { data: posts } = await supabase
       .from('community_posts')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(3);
-    setRecentPosts(data || []);
+      .select('id')
+      .eq('user_id', user.id);
+
+    setStats({
+      rooms: rooms?.length || 0,
+      posts: posts?.length || 0,
+      streak: profile?.streak || 0
+    });
   };
 
   const loadDailyQuestion = async () => {
@@ -57,206 +74,179 @@ const Home = () => {
       .select('*')
       .eq('is_spotlight', true)
       .single();
-    setDailyQuestion(data);
+    
+    if (data) {
+      setDailyQuestion(data);
+      
+      // Check if user has answered
+      const { data: answers } = await supabase
+        .from('community_comments')
+        .select('id')
+        .eq('post_id', data.id)
+        .eq('user_id', user!.id);
+      
+      setHasAnswered((answers?.length || 0) > 0);
+    }
   };
 
-  if (loading || !profile) return <div>Loading...</div>;
+  const answerDailyQuestion = async () => {
+    if (!dailyQuestion || hasAnswered) return;
+    
+    toast({ title: "Opening daily question..." });
+    navigate('/community');
+  };
 
-  const AVATAR_STAGES = ["🥚", "🐣", "🐥", "🐦", "🦅"];
-  const avatarStage = Math.min(Math.floor((profile.total_lifetime_xp || 0) / 100), 4);
+  if (loading || !profile) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  const selectedPet = PETS.find(p => p.id === (localStorage.getItem('selected_pet') || 'chick')) || PETS[0];
+  const xpProgress = (profile.xp % 100);
+  const currentLevel = Math.floor(profile.xp / 100) + 1;
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      {/* Welcome Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Welcome back, {profile.name || profile.username}! 👋</h1>
-        <p className="text-lg text-muted-foreground">Here's what's happening today</p>
-      </div>
-
-      {/* Top Row: Pet/XP + Stats */}
-      <div className="grid lg:grid-cols-12 gap-6">
-        {/* Pet & XP */}
-        <Card className="lg:col-span-4 p-6 glass-card">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-primary p-1 animate-glow">
-                <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-                  <span className="text-5xl">{AVATAR_STAGES[avatarStage]}</span>
-                </div>
-              </div>
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-accent">
-                Level {profile.level}
-              </Badge>
+    <div className="min-h-screen bg-gradient-hero p-6 space-y-6">
+      {/* Hero Profile Section */}
+      <Card className="glass-card p-8">
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Left: User Info */}
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                Welcome back, {profile.name || 'Student'}! 👋
+              </h1>
+              <p className="text-muted-foreground">Ready to crush your goals today?</p>
             </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">
-                {profile.xp} / {profile.level * 100} XP
+
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="text-6xl">{selectedPet.emoji}</div>
+                <Badge className="absolute -bottom-1 -right-1 bg-gradient-primary">
+                  Lv {currentLevel}
+                </Badge>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {profile.total_lifetime_xp} Total XP
+              <div className="flex-1 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-semibold">{selectedPet.name}</span>
+                  <span className="text-muted-foreground">{profile.xp} XP</span>
+                </div>
+                <Progress value={xpProgress} className="h-3" />
+                <p className="text-xs text-muted-foreground">
+                  {100 - xpProgress} XP to level {currentLevel + 1}
+                </p>
               </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Card className="flex-1 p-3 bg-primary/10 border-primary/20">
+                <div className="text-2xl font-bold text-primary">{stats.streak}</div>
+                <div className="text-xs text-muted-foreground">Day Streak 🔥</div>
+              </Card>
+              <Card className="flex-1 p-3 bg-accent/10 border-accent/20">
+                <div className="text-2xl font-bold text-accent">{stats.rooms}</div>
+                <div className="text-xs text-muted-foreground">Sessions</div>
+              </Card>
+              <Card className="flex-1 p-3 bg-secondary/50 border-secondary">
+                <div className="text-2xl font-bold">{stats.posts}</div>
+                <div className="text-xs text-muted-foreground">Posts</div>
+              </Card>
             </div>
           </div>
-        </Card>
 
-        {/* Quick Stats */}
-        <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/tasks">
-            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Target className="w-8 h-8 text-primary" />
-                <div className="text-2xl font-bold">{profile.xp}</div>
-                <div className="text-xs text-muted-foreground">Current XP</div>
+          {/* Right: Daily Question */}
+          <Card className="p-6 bg-gradient-accent hover-lift border-2 border-accent/30">
+            <div className="flex items-start gap-3 mb-4">
+              <Sparkles className="w-6 h-6 text-accent-foreground" />
+              <div>
+                <h3 className="font-bold text-accent-foreground">Question of the Day</h3>
+                <p className="text-sm text-accent-foreground/80">Answer to earn +10 XP!</p>
               </div>
-            </Card>
-          </Link>
-          <Link to="/dashboard">
-            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <TrendingUp className="w-8 h-8 text-accent" />
-                <div className="text-2xl font-bold">{profile.streak}</div>
-                <div className="text-xs text-muted-foreground">Day Streak</div>
-              </div>
-            </Card>
-          </Link>
-          <Link to="/rooms">
-            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Users className="w-8 h-8 text-primary" />
-                <div className="text-2xl font-bold">{liveRooms.length}</div>
-                <div className="text-xs text-muted-foreground">Live Rooms</div>
-              </div>
-            </Card>
-          </Link>
-          <Link to="/community">
-            <Card className="p-4 glass-card hover-lift cursor-pointer h-full">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <Sparkles className="w-8 h-8 text-accent" />
-                <div className="text-2xl font-bold">{recentPosts.length}</div>
-                <div className="text-xs text-muted-foreground">New Posts</div>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </div>
-
-      {/* Daily AI Question */}
-      {dailyQuestion && (
-        <Card className="p-6 glass-card border-2 border-accent/20">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-accent flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-gradient-accent">Daily Question</Badge>
-                <Badge variant="secondary">+10 XP</Badge>
-              </div>
-              <h3 className="font-semibold text-lg mb-2">{dailyQuestion.title}</h3>
-              <p className="text-sm text-muted-foreground mb-3">{dailyQuestion.content}</p>
-              <Link to="/community">
-                <Button size="sm" className="bg-gradient-accent">
-                  Answer & Earn XP
+            {dailyQuestion ? (
+              <>
+                <p className="text-accent-foreground mb-4 font-medium">{dailyQuestion.title}</p>
+                <Button
+                  onClick={answerDailyQuestion}
+                  disabled={hasAnswered}
+                  className="w-full bg-white text-accent hover:bg-white/90"
+                >
+                  {hasAnswered ? "Already Answered ✓" : "Answer Now +10 XP"}
                 </Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Live Focus Rooms */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Zap className="w-6 h-6 text-primary" />
-            Live Focus Rooms
-          </h2>
-          <Link to="/rooms">
-            <Button variant="outline" size="sm">View All</Button>
-          </Link>
+              </>
+            ) : (
+              <p className="text-accent-foreground/60 text-sm">Check back tomorrow!</p>
+            )}
+          </Card>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {liveRooms.map((room) => (
-            <Link key={room.id} to="/rooms">
-              <Card className="p-4 glass-card hover-lift cursor-pointer">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="text-xs">{room.subject}</Badge>
-                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {room.duration_minutes}m
-                  </Badge>
-                </div>
-                <h3 className="font-semibold mb-2">{room.title}</h3>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>Active</span>
-                </div>
-              </Card>
-            </Link>
-          ))}
-          {liveRooms.length === 0 && (
-            <Card className="p-6 glass-card col-span-full text-center">
-              <p className="text-muted-foreground">No active rooms right now. Be the first to start one!</p>
-              <Link to="/rooms">
-                <Button className="mt-4 bg-gradient-primary">Create Room</Button>
-              </Link>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Community Activity */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-accent" />
-            Recent Community Posts
-          </h2>
-          <Link to="/community">
-            <Button variant="outline" size="sm">View All</Button>
-          </Link>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4">
-          {recentPosts.map((post) => (
-            <Link key={post.id} to="/community">
-              <Card className="p-4 glass-card hover-lift cursor-pointer">
-                <Badge className="mb-2 text-xs">{post.category}</Badge>
-                <h3 className="font-semibold mb-2 line-clamp-2">{post.title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">{post.content}</p>
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    👤 {post.username}
-                  </span>
-                  <span>❤️ {post.likes}</span>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+      </Card>
 
       {/* Quick Actions */}
-      <Card className="p-6 glass-card">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+      <div className="space-y-3">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <Target className="w-6 h-6" />
+          Quick Actions
+        </h2>
         <div className="grid md:grid-cols-3 gap-4">
-          <Link to="/rooms">
-            <Button className="w-full h-16 text-base bg-gradient-primary">
-              <Rocket className="w-5 h-5 mr-2" />
-              Join Focus Room
-            </Button>
-          </Link>
-          <Link to="/tasks">
-            <Button variant="outline" className="w-full h-16 text-base">
-              <Target className="w-5 h-5 mr-2" />
-              Manage Tasks
-            </Button>
-          </Link>
-          <Link to="/community">
-            <Button variant="outline" className="w-full h-16 text-base">
-              <BookOpen className="w-5 h-5 mr-2" />
-              Browse Community
-            </Button>
-          </Link>
+          <Card 
+            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20"
+            onClick={() => navigate('/rooms')}
+          >
+            <Users className="w-10 h-10 mb-3 text-primary group-hover:scale-110 transition-transform" />
+            <h3 className="font-bold text-lg mb-1">Join Focus Room</h3>
+            <p className="text-sm text-muted-foreground">Study with others in real-time</p>
+          </Card>
+
+          <Card 
+            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20"
+            onClick={() => navigate('/tasks')}
+          >
+            <CheckSquare className="w-10 h-10 mb-3 text-accent group-hover:scale-110 transition-transform" />
+            <h3 className="font-bold text-lg mb-1">Manage Tasks</h3>
+            <p className="text-sm text-muted-foreground">Organize your assignments</p>
+          </Card>
+
+          <Card 
+            className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-secondary/30 to-secondary/50 border-secondary"
+            onClick={() => navigate('/community')}
+          >
+            <MessageCircle className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-bold text-lg mb-1">Community</h3>
+            <p className="text-sm text-muted-foreground">Share tips and get support</p>
+          </Card>
+        </div>
+      </div>
+
+      {/* Daily Stats Overview */}
+      <Card className="glass-card p-6">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5" />
+          Today's Progress
+        </h2>
+        <div className="grid md:grid-cols-4 gap-4">
+          <div className="text-center p-4 rounded-lg bg-muted/50">
+            <Calendar className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-2xl font-bold">{profile.xp}</div>
+            <div className="text-xs text-muted-foreground">Total XP</div>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-muted/50">
+            <Users className="w-8 h-8 mx-auto mb-2 text-accent" />
+            <div className="text-2xl font-bold">{stats.rooms}</div>
+            <div className="text-xs text-muted-foreground">Focus Sessions</div>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-muted/50">
+            <CheckSquare className="w-8 h-8 mx-auto mb-2 text-primary" />
+            <div className="text-2xl font-bold">Lv {currentLevel}</div>
+            <div className="text-xs text-muted-foreground">Current Level</div>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-muted/50">
+            <MessageCircle className="w-8 h-8 mx-auto mb-2 text-accent" />
+            <div className="text-2xl font-bold">{stats.posts}</div>
+            <div className="text-xs text-muted-foreground">Community Posts</div>
+          </div>
         </div>
       </Card>
     </div>

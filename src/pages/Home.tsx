@@ -343,146 +343,184 @@ const Home = () => {
         </div>
       </Card>
 
+      {/* Main Content - Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="glass-card p-6 space-y-6 lg:col-span-1">
+        {/* Left Column - Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 rounded-lg bg-secondary/50">
-              <CheckCircle className="w-6 h-6 mx-auto mb-1 text-primary" />
-              <div className="text-xl font-bold">{stats.tasksCompleted}</div>
+            <Card className="glass-card p-4 text-center">
+              <CheckCircle className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
+              <div className="text-2xl font-bold">{stats.tasksCompleted}</div>
               <div className="text-xs text-muted-foreground">Tasks Done</div>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-secondary/50">
-              <Clock className="w-6 h-6 mx-auto mb-1 text-primary" />
-              <div className="text-xl font-bold">{stats.focusMinutes}</div>
+            </Card>
+            <Card className="glass-card p-4 text-center">
+              <Clock className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
+              <div className="text-2xl font-bold">{stats.focusMinutes}</div>
               <div className="text-xs text-muted-foreground">Focus Mins</div>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-secondary/50">
-              <Users className="w-6 h-6 mx-auto mb-1 text-primary" />
-              <div className="text-xl font-bold">{stats.roomsJoined}</div>
+            </Card>
+            <Card className="glass-card p-4 text-center">
+              <Users className="w-6 h-6 mx-auto mb-2 text-[#B7D8B5]" />
+              <div className="text-2xl font-bold">{stats.roomsJoined}</div>
               <div className="text-xs text-muted-foreground">Rooms</div>
-            </div>
+            </Card>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="font-semibold">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => navigate('/rooms')} className="w-full">
-                Focus Rooms
+          {/* Quick Actions */}
+          <Card className="glass-card p-6">
+            <h3 className="font-semibold mb-4 text-lg">Quick Actions</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <Button onClick={() => navigate('/rooms')} className="w-full h-20 text-base">
+                <Users className="w-5 h-5 mb-1" />
+                <span className="block text-sm">Focus Rooms</span>
               </Button>
-              <Button onClick={() => navigate('/tasks')} variant="secondary" className="w-full">
-                My Tasks
+              <Button onClick={() => navigate('/tasks')} variant="secondary" className="w-full h-20 text-base">
+                <CheckCircle className="w-5 h-5 mb-1" />
+                <span className="block text-sm">My Tasks</span>
               </Button>
-              <Button onClick={() => navigate('/community')} variant="outline" className="w-full col-span-2">
-                Community
+              <Button onClick={() => navigate('/community')} variant="outline" className="w-full h-20 text-base">
+                <Sparkles className="w-5 h-5 mb-1" />
+                <span className="block text-sm">Community</span>
               </Button>
             </div>
-          </div>
+          </Card>
 
-          <div className="space-y-3">
-            <h3 className="font-semibold">My Classes</h3>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {userClasses.slice(0, 3).map(cls => (
-                <div key={cls.id} className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{cls.class_name}</div>
-                    <div className="text-xs text-muted-foreground">{cls.subject}</div>
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => deleteClass(cls.id)}
-                    className="h-6 w-6"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <Input
-                placeholder="Class name..."
-                value={newClass.name}
-                onChange={e => setNewClass({ ...newClass, name: e.target.value })}
-              />
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Subject..."
-                  value={newClass.subject}
-                  onChange={e => setNewClass({ ...newClass, subject: e.target.value })}
-                />
-                <Button onClick={addClass} size="sm">Add</Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="glass-card p-6 space-y-6 lg:col-span-1">
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-primary" />
-              Top 5 Leaderboard
-            </h3>
-            <div className="space-y-2">
-              {leaderboard.map((user, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30">
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-                    {idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{user.name || user.username}</div>
-                    <div className="text-xs text-muted-foreground">{user.total_lifetime_xp} XP</div>
-                  </div>
-                  <Badge variant="secondary">L{user.level}</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center justify-between">
-              <span>AI Weekly Summary</span>
-              {weeklySummary?.isDummy && (
-                <Badge variant="outline" className="text-xs">Preview</Badge>
-              )}
-            </h3>
-            {weeklySummary ? (
-              <div className="p-4 rounded-lg bg-gradient-to-br from-[#B7D8B5]/10 to-[#D6CFC4]/10 text-sm border border-[#B7D8B5]/20">
-                <p className="text-foreground leading-relaxed">{weeklySummary.summary_text}</p>
-                <div className="mt-4 pt-4 border-t border-[#B7D8B5]/30 grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 rounded-lg bg-background/50">
-                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.tasks_completed}</div>
-                    <div className="text-xs text-muted-foreground">Tasks</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-background/50">
-                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.focus_minutes}</div>
-                    <div className="text-xs text-muted-foreground">Minutes</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-background/50">
-                    <div className="font-bold text-lg text-[#B7D8B5]">{weeklySummary.xp_gained}</div>
-                    <div className="text-xs text-muted-foreground">XP</div>
-                  </div>
-                </div>
-                {!weeklySummary.isDummy && (
-                  <Button 
-                    onClick={generateWeeklySummary} 
-                    size="sm" 
-                    variant="outline"
-                    className="w-full mt-3"
-                  >
-                    Regenerate Summary
-                  </Button>
+          {/* AI Weekly Summary - Large and Prominent */}
+          <Card className="glass-card p-8 shadow-elegant">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-2xl flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-[#B7D8B5]" />
+                  AI Weekly Summary
+                </h3>
+                {weeklySummary?.isDummy && (
+                  <Badge variant="outline" className="text-sm">Preview</Badge>
                 )}
               </div>
-            ) : (
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground mb-3">No summary yet for this week</p>
-                <Button onClick={generateWeeklySummary} size="sm">
-                  Generate Summary
-                </Button>
+              
+              {weeklySummary ? (
+                <div className="space-y-4">
+                  <div className="p-6 rounded-lg bg-gradient-to-br from-[#B7D8B5]/10 to-[#D6CFC4]/10 border-2 border-[#B7D8B5]/20">
+                    <p className="text-base leading-relaxed text-foreground">{weeklySummary.summary_text}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#B7D8B5]/20 to-transparent text-center">
+                      <div className="font-bold text-3xl text-[#B7D8B5] mb-1">{weeklySummary.tasks_completed}</div>
+                      <div className="text-sm text-muted-foreground">Tasks Completed</div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#D6CFC4]/20 to-transparent text-center">
+                      <div className="font-bold text-3xl text-[#B7D8B5] mb-1">{weeklySummary.focus_minutes}</div>
+                      <div className="text-sm text-muted-foreground">Focus Minutes</div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-[#B7D8B5]/20 to-transparent text-center">
+                      <div className="font-bold text-3xl text-[#B7D8B5] mb-1">{weeklySummary.xp_gained}</div>
+                      <div className="text-sm text-muted-foreground">XP Gained</div>
+                    </div>
+                  </div>
+                  
+                  {!weeklySummary.isDummy && (
+                    <Button 
+                      onClick={generateWeeklySummary} 
+                      size="lg" 
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Regenerate Summary
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Sparkles className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-4">No summary yet for this week</p>
+                  <Button onClick={generateWeeklySummary} size="lg">
+                    Generate AI Summary
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* My Classes */}
+          <Card className="glass-card p-6">
+            <h3 className="font-semibold mb-4 text-lg">My Classes</h3>
+            <div className="space-y-3">
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {userClasses.map(cls => (
+                  <div key={cls.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{cls.class_name}</div>
+                      <div className="text-xs text-muted-foreground">{cls.subject}</div>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteClass(cls.id)}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        </Card>
+              <div className="space-y-2 pt-2 border-t">
+                <Input
+                  placeholder="Class name..."
+                  value={newClass.name}
+                  onChange={e => setNewClass({ ...newClass, name: e.target.value })}
+                />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Subject..."
+                    value={newClass.subject}
+                    onChange={e => setNewClass({ ...newClass, subject: e.target.value })}
+                  />
+                  <Button onClick={addClass}>Add</Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Sidebar - Leaderboard */}
+        <div className="lg:col-span-1">
+          <Card className="glass-card p-6 sticky top-6 shadow-elegant">
+            <div className="space-y-4">
+              <h3 className="font-bold text-xl flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-[#B7D8B5]" />
+                Leaderboard
+              </h3>
+              <div className="space-y-2">
+                {leaderboard.slice(0, 10).map((user, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                      idx < 3 
+                        ? 'bg-gradient-to-r from-[#B7D8B5]/20 to-transparent border border-[#B7D8B5]/30' 
+                        : 'bg-secondary/30 hover:bg-secondary/50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      idx === 0 ? 'bg-yellow-500/20 text-yellow-600' :
+                      idx === 1 ? 'bg-gray-400/20 text-gray-600' :
+                      idx === 2 ? 'bg-orange-500/20 text-orange-600' :
+                      'bg-primary/20 text-primary'
+                    }`}>
+                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{user.name || user.username}</div>
+                      <div className="text-xs text-muted-foreground">{user.total_lifetime_xp} XP</div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">L{user.level}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
 
       <EditProfileModal 

@@ -218,33 +218,33 @@ const Home = () => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      {/* HERO SECTION: XP, Level, Streak, Pet */}
-      <Card className="glass-card p-8 sm:p-12 shadow-elegant relative overflow-hidden">
+      {/* HERO SECTION: XP, Level, Streak, Pet - More Compact */}
+      <Card className="glass-card p-6 sm:p-8 shadow-elegant relative overflow-hidden">
         {/* Subtle background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#B7D8B5]/10 via-transparent to-[#D6CFC4]/10 pointer-events-none" />
         
         <div className="relative z-10">
-          <div className="flex flex-col items-center text-center space-y-6">
-            {/* Pet + XP Ring */}
+          <div className="flex flex-col items-center text-center space-y-4">
+            {/* Pet + XP Ring - Smaller */}
             <div className="relative">
-              <svg className="w-40 h-40 sm:w-48 sm:h-48 -rotate-90">
+              <svg className="w-32 h-32 sm:w-36 sm:h-36 -rotate-90">
                 <circle
-                  cx="96"
-                  cy="96"
-                  r="88"
+                  cx="72"
+                  cy="72"
+                  r="64"
                   stroke="hsl(var(--muted))"
-                  strokeWidth="12"
+                  strokeWidth="10"
                   fill="none"
                 />
                 <circle
-                  cx="96"
-                  cy="96"
-                  r="88"
+                  cx="72"
+                  cy="72"
+                  r="64"
                   stroke="url(#hero-gradient)"
-                  strokeWidth="12"
+                  strokeWidth="10"
                   fill="none"
-                  strokeDasharray={`${2 * Math.PI * 88}`}
-                  strokeDashoffset={`${2 * Math.PI * 88 * (1 - xpProgress)}`}
+                  strokeDasharray={`${2 * Math.PI * 64}`}
+                  strokeDashoffset={`${2 * Math.PI * 64 * (1 - xpProgress)}`}
                   className="transition-all duration-500"
                 />
                 <defs>
@@ -255,15 +255,15 @@ const Home = () => {
                   </linearGradient>
                 </defs>
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-7xl sm:text-8xl animate-float">
+              <div className="absolute inset-0 flex items-center justify-center text-6xl animate-float">
                 {petEmoji}
               </div>
             </div>
 
             {/* Name + School Info */}
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl font-bold gradient-text">{name}</h1>
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-muted-foreground text-sm sm:text-base">
+            <div className="space-y-1">
+              <h1 className="text-3xl sm:text-4xl font-bold gradient-text">{name}</h1>
+              <div className="flex flex-wrap items-center justify-center gap-2 text-muted-foreground text-xs sm:text-sm">
                 {profile?.school && <span>{profile.school}</span>}
                 {profile?.grade && profile?.school && <span>•</span>}
                 {profile?.grade && <span>Grade {profile.grade}</span>}
@@ -271,40 +271,40 @@ const Home = () => {
             </div>
 
             {/* Level + XP Bar */}
-            <div className="space-y-3 w-full max-w-md px-4">
-              <div className="flex items-center justify-between text-xl sm:text-2xl font-bold">
+            <div className="space-y-2 w-full max-w-md px-4">
+              <div className="flex items-center justify-between text-lg sm:text-xl font-bold">
                 <span>Level {profile?.level || 1}</span>
                 <span className="text-[#B7D8B5]">{profile?.xp || 0} / {nextLevelXP} XP</span>
               </div>
-              <Progress value={xpProgress * 100} className="h-4 shadow-lg" />
+              <Progress value={xpProgress * 100} className="h-3 shadow-lg" />
             </div>
 
             {/* Streak + Rank Badges */}
-            <div className="flex gap-4 sm:gap-6 flex-wrap justify-center">
-              <Badge variant="secondary" className="text-lg sm:text-2xl px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover-lift">
+            <div className="flex gap-3 sm:gap-4 flex-wrap justify-center">
+              <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg hover-lift">
                 🔥 {profile?.streak || 0} Day Streak
               </Badge>
-              <Badge variant="secondary" className="text-lg sm:text-2xl px-4 sm:px-6 py-2 sm:py-3 shadow-lg hover-lift">
-                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+              <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-1.5 sm:py-2 shadow-lg hover-lift">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Rank #{userRank > 0 ? userRank : '-'}
               </Badge>
             </div>
 
-            {/* Edit Profile + Theme/Pet Selectors */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center w-full max-w-2xl pt-4">
+            {/* Edit Profile + Theme/Pet Selectors - More Compact */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center w-full max-w-2xl pt-2">
               <Button 
                 variant="outline" 
-                size="lg" 
+                size="default" 
                 onClick={() => setIsEditProfileOpen(true)}
                 className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
               >
-                <Edit className="w-5 h-5 mr-2" />
+                <Edit className="w-4 h-4 mr-2" />
                 Edit Profile
               </Button>
               
-              <div className="flex gap-4 w-full sm:w-auto">
+              <div className="flex gap-3 w-full sm:w-auto">
                 <Select value={theme} onValueChange={changeTheme}>
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="w-full sm:w-36">
                     <SelectValue placeholder="Theme" />
                   </SelectTrigger>
                   <SelectContent>
@@ -318,10 +318,10 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Pet Selection */}
-            <div className="w-full max-w-md space-y-3">
-              <label className="text-sm font-medium flex items-center justify-center gap-2">
-                <Sparkles className="w-4 h-4" />
+            {/* Pet Selection - Compact */}
+            <div className="w-full max-w-lg space-y-2">
+              <label className="text-xs font-medium flex items-center justify-center gap-2">
+                <Sparkles className="w-3 h-3" />
                 Choose Your Study Pet
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -329,7 +329,7 @@ const Home = () => {
                   <button
                     key={p.id}
                     onClick={() => updatePetType(p.id)}
-                    className={`p-3 rounded-lg text-3xl hover:scale-110 transition-transform ${
+                    className={`p-2 rounded-lg text-2xl hover:scale-110 transition-transform ${
                       petType === p.id ? "bg-[#B7D8B5]/30 ring-2 ring-[#B7D8B5]" : "bg-secondary/30"
                     }`}
                     title={p.name}
@@ -343,10 +343,10 @@ const Home = () => {
         </div>
       </Card>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Content - Adjusted Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-3">
             <Card className="glass-card p-4 text-center">
@@ -484,16 +484,16 @@ const Home = () => {
           </Card>
         </div>
 
-        {/* Right Sidebar - Leaderboard */}
-        <div className="lg:col-span-1">
+        {/* Right Sidebar - Leaderboard - More Prominent */}
+        <div className="lg:col-span-2">
           <Card className="glass-card p-6 sticky top-6 shadow-elegant">
             <div className="space-y-4">
-              <h3 className="font-bold text-xl flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-[#B7D8B5]" />
+              <h3 className="font-bold text-2xl flex items-center gap-2">
+                <Trophy className="w-6 h-6 text-[#B7D8B5]" />
                 Leaderboard
               </h3>
-              <div className="space-y-2">
-                {leaderboard.slice(0, 10).map((user, idx) => (
+              <div className="space-y-2.5">
+                {leaderboard.slice(0, 12).map((user, idx) => (
                   <div 
                     key={idx} 
                     className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
@@ -502,7 +502,7 @@ const Home = () => {
                         : 'bg-secondary/30 hover:bg-secondary/50'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-bold ${
                       idx === 0 ? 'bg-yellow-500/20 text-yellow-600' :
                       idx === 1 ? 'bg-gray-400/20 text-gray-600' :
                       idx === 2 ? 'bg-orange-500/20 text-orange-600' :

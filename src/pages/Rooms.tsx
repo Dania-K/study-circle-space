@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Clock, Users, Search, Plus, Check, MessageSquare } from "lucide-react";
+import { Clock, Users, Search, Plus, Check, MessageSquare, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CreateRoomDialog } from "@/components/CreateRoomDialog";
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const MOODS = ["😊", "😤", "🎯", "💪", "🧘", "🔥"];
 
@@ -40,6 +40,7 @@ const Rooms = () => {
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [showProductivityDialog, setShowProductivityDialog] = useState(false);
   const [productivityRating, setProductivityRating] = useState<number | null>(null);
+  const [deleteRoomId, setDeleteRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -70,6 +71,32 @@ const Rooms = () => {
       }));
       setRooms(roomsWithCount);
       setFilteredRooms(roomsWithCount);
+    }
+  };
+
+  const deleteRoom = async () => {
+    if (!deleteRoomId || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('focus_rooms')
+        .delete()
+        .eq('id', deleteRoomId)
+        .eq('host_id', user.id);
+
+      if (error) {
+        console.error('Error deleting room:', error);
+        toast({ title: "Error deleting room", variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Room deleted successfully" });
+      loadRooms();
+    } catch (err) {
+      console.error('Unexpected error deleting room:', err);
+      toast({ title: "Error deleting room", variant: "destructive" });
+    } finally {
+      setDeleteRoomId(null);
     }
   };
 
@@ -433,30 +460,47 @@ const Rooms = () => {
           {filteredRooms.map(room => (
             <Card
               key={room.id}
-              className="p-6 cursor-pointer hover:shadow-lg transition-all"
-              onClick={() => setSelectedRoom(room)}
+              className="p-6 hover:shadow-lg transition-all relative"
             >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-lg">{room.title}</h3>
-                <Badge variant="secondary">{room.subject}</Badge>
-              </div>
-              
-              {room.description && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{room.description}</p>
+              {room.host_id === user?.id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteRoomId(room.id);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               )}
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span>{room.duration_minutes} minutes</span>
+              <div 
+                className="cursor-pointer"
+                onClick={() => setSelectedRoom(room)}
+              >
+                <div className="flex justify-between items-start mb-3 pr-8">
+                  <h3 className="font-semibold text-lg">{room.title}</h3>
+                  <Badge variant="secondary">{room.subject}</Badge>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary" />
-                  <span>{room.participantCount} studying</span>
-                </div>
-                {room.in_session && (
-                  <Badge variant="default" className="w-full justify-center">Active Now</Badge>
+                
+                {room.description && (
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{room.description}</p>
                 )}
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    <span>{room.duration_minutes} minutes</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span>{room.participantCount} studying</span>
+                  </div>
+                  {room.in_session && (
+                    <Badge variant="default" className="w-full justify-center">Active Now</Badge>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
@@ -474,6 +518,25 @@ const Rooms = () => {
         onOpenChange={setIsCreateOpen}
         onRoomCreated={loadRooms}
       />
+
+      <AlertDialog open={deleteRoomId !== null} onOpenChange={() => setDeleteRoomId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Focus Room?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this room? This action cannot be undone and all associated sessions will remain but the room will no longer be accessible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteRoomId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <Button variant="destructive" onClick={deleteRoom}>
+              Delete Room
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -4,14 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Clock, Users, Search, Plus, Check } from "lucide-react";
+import { Clock, Users, Search, Plus, Check, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CreateRoomDialog } from "@/components/CreateRoomDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const MOODS = ["😊", "😤", "🎯", "💪", "🧘", "🔥"];
+
+const MOTIVATIONAL_MESSAGES = [
+  "You've got this! 💪",
+  "Keep going strong! 🔥",
+  "Almost there! Don't give up! 🎯",
+  "You're doing amazing! ⭐",
+  "Focus is key! Stay on track! 🧘",
+  "Believe in yourself! 🌟"
+];
 
 const Rooms = () => {
   const { user, loading } = useAuth();
@@ -27,6 +37,9 @@ const Rooms = () => {
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [showProductivityDialog, setShowProductivityDialog] = useState(false);
+  const [productivityRating, setProductivityRating] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -131,8 +144,76 @@ const Rooms = () => {
     if (timeLeft > 0 && inRoom) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
+    } else if (timeLeft === 0 && inRoom) {
+      setShowProductivityDialog(true);
     }
   }, [timeLeft, inRoom]);
+
+  useEffect(() => {
+    if (inRoom && selectedRoom) {
+      loadActiveSessions();
+      const interval = setInterval(loadActiveSessions, 10000); // Refresh every 10 seconds
+      return () => clearInterval(interval);
+    }
+  }, [inRoom, selectedRoom]);
+
+  const loadActiveSessions = async () => {
+    if (!selectedRoom) return;
+    
+    const { data } = await supabase
+      .from('sessions')
+      .select('*, profiles(name)')
+      .eq('room_id', selectedRoom.id)
+      .is('end_time', null)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (data) setActiveSessions(data);
+  };
+
+  const sendMotivationalMessage = async (message: string) => {
+    if (!user || !selectedRoom) return;
+    
+    await supabase.from('messages').insert({
+      room_id: selectedRoom.id,
+      user_id: user.id,
+      text: message,
+    });
+    
+    toast({ title: "Message sent! 🎉" });
+  };
+
+  const submitProductivityRating = async () => {
+    if (productivityRating === null || !user) return;
+
+    const xpAmount = productivityRating * 10; // 1-5 rating = 10-50 XP
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('xp, total_lifetime_xp, level')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      const newXP = profile.xp + xpAmount;
+      const newTotalXP = profile.total_lifetime_xp + xpAmount;
+      const newLevel = Math.floor(newTotalXP / 100) + 1;
+
+      await supabase.from('profiles').update({
+        xp: newXP,
+        total_lifetime_xp: newTotalXP,
+        level: newLevel
+      }).eq('id', user.id);
+
+      toast({ title: `+${xpAmount} XP! Great work! 🎉` });
+    }
+
+    setShowProductivityDialog(false);
+    setInRoom(false);
+    setSelectedRoom(null);
+    setProductivityRating(null);
+    loadRooms();
+  };
 
   if (loading) return <div>Loading...</div>;
 
@@ -142,54 +223,137 @@ const Rooms = () => {
 
     return (
       <div className="min-h-screen p-6">
-        <Card className="max-w-3xl mx-auto p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">{selectedRoom.title}</h1>
-            <Badge variant="secondary">{selectedRoom.subject}</Badge>
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card className="p-8">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold mb-2">{selectedRoom.title}</h1>
+                <Badge variant="secondary">{selectedRoom.subject}</Badge>
+              </div>
+
+              <div className="text-center mb-8">
+                <div className="text-6xl font-bold mb-4">
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </div>
+                <Progress value={(1 - timeLeft / (selectedRoom.duration_minutes * 60)) * 100} className="mb-4" />
+                <p className="text-muted-foreground">Working on: {currentTask}</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <h3 className="font-semibold text-lg mb-3">Your Tasks:</h3>
+                {subtasks.map((subtask, index) => {
+                  const isCompleted = typeof subtask === 'object' && subtask.completed;
+                  const taskText = typeof subtask === 'string' ? subtask : subtask.text || '';
+                  
+                  return (
+                    <Card key={index} className={`p-4 flex items-center gap-3 ${isCompleted ? 'opacity-50' : ''}`}>
+                      <button
+                        onClick={() => !isCompleted && completeSubtask(index)}
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          isCompleted ? 'bg-primary border-primary' : 'border-muted-foreground'
+                        }`}
+                      >
+                        {isCompleted && <Check className="w-4 h-4 text-primary-foreground" />}
+                      </button>
+                      <span className={isCompleted ? 'line-through' : ''}>{taskText}</span>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold text-lg mb-3">Send Motivation:</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {MOTIVATIONAL_MESSAGES.map((msg, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => sendMotivationalMessage(msg)}
+                      className="text-xs"
+                    >
+                      <MessageSquare className="w-3 h-3 mr-1" />
+                      {msg}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setInRoom(false);
+                  setSelectedRoom(null);
+                  loadRooms();
+                }}
+              >
+                Leave Room
+              </Button>
+            </Card>
           </div>
 
-          <div className="text-center mb-8">
-            <div className="text-6xl font-bold mb-4">
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+          <div>
+            <Card className="p-6">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                In This Room ({activeSessions.length})
+              </h3>
+              <div className="space-y-3">
+                {activeSessions.map((session) => (
+                  <Card key={session.id} className="p-3 bg-muted/50">
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm">
+                        {session.mood}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{session.profiles?.name || 'Anonymous'}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{session.task_text}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                {activeSessions.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No one else here yet</p>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        <AlertDialog open={showProductivityDialog} onOpenChange={setShowProductivityDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>How productive were you?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Rate your focus session to earn XP! (1-5 stars, each star = 10 XP)
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex justify-center gap-2 my-6">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  onClick={() => setProductivityRating(rating)}
+                  className={`text-4xl transition-all ${
+                    productivityRating && rating <= productivityRating
+                      ? 'scale-110'
+                      : 'opacity-40 hover:opacity-70'
+                  }`}
+                >
+                  ⭐
+                </button>
+              ))}
             </div>
-            <Progress value={(1 - timeLeft / (selectedRoom.duration_minutes * 60)) * 100} className="mb-4" />
-            <p className="text-muted-foreground">Working on: {currentTask}</p>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg mb-3">Your Tasks:</h3>
-            {subtasks.map((subtask, index) => {
-              const isCompleted = typeof subtask === 'object' && subtask.completed;
-              const taskText = typeof subtask === 'string' ? subtask : subtask.text || '';
-              
-              return (
-                <Card key={index} className={`p-4 flex items-center gap-3 ${isCompleted ? 'opacity-50' : ''}`}>
-                  <button
-                    onClick={() => !isCompleted && completeSubtask(index)}
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      isCompleted ? 'bg-primary border-primary' : 'border-muted-foreground'
-                    }`}
-                  >
-                    {isCompleted && <Check className="w-4 h-4 text-primary-foreground" />}
-                  </button>
-                  <span className={isCompleted ? 'line-through' : ''}>{taskText}</span>
-                </Card>
-              );
-            })}
-          </div>
-
-          <Button
-            variant="outline"
-            className="w-full mt-6"
-            onClick={() => {
-              setInRoom(false);
-              setSelectedRoom(null);
-              loadRooms();
-            }}
-          >
-            Leave Room
-          </Button>
-        </Card>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={submitProductivityRating}
+                disabled={productivityRating === null}
+              >
+                Submit & Get XP
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }

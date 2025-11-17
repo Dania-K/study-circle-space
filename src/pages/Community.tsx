@@ -71,7 +71,42 @@ const Community = () => {
   }, [user]);
 
   useEffect(() => {
-    if (selectedPost) loadComments(selectedPost.id);
+    if (selectedPost) {
+      loadComments(selectedPost.id);
+      
+      // Set up real-time subscription for comments
+      const channel = supabase
+        .channel(`comments-${selectedPost.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'community_comments',
+            filter: `post_id=eq.${selectedPost.id}`
+          },
+          () => {
+            loadComments(selectedPost.id);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'community_comments',
+            filter: `post_id=eq.${selectedPost.id}`
+          },
+          () => {
+            loadComments(selectedPost.id);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [selectedPost]);
 
   const loadPosts = async () => {
@@ -204,44 +239,53 @@ const Community = () => {
   };
 
   const loadComments = async (postId: string) => {
-    const { data, error } = await supabase
-      .from('community_comments')
-      .select('*')
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true });
-    
-    // Add dummy comments for QOTD
-    let dummyComments: Comment[] = [];
-    if (postId === dailyQuestion?.id && dailyQuestion?.is_spotlight) {
-      dummyComments = [
-        {
-          id: 'dummy-comment-1',
-          post_id: postId,
-          user_id: 'dummy-user-9',
-          username: 'Zara Kim',
-          content: 'Breaking down big assignments into smaller chunks really helps! I also reward myself after completing each section.',
-          created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          grade: '10th grade',
-          school: 'Valley High'
-        },
-        {
-          id: 'dummy-comment-2',
-          post_id: postId,
-          user_id: 'dummy-user-10',
-          username: 'Noah Anderson',
-          content: 'I find that studying with friends keeps me accountable. We use focus rooms together and it makes a huge difference!',
-          created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          grade: '11th grade',
-          school: 'Lincoln High School'
-        }
-      ];
-    }
-    
-    if (!error && data) {
+    try {
+      const { data, error } = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        console.error('Error loading comments:', error);
+        toast({ title: "Error loading comments", variant: "destructive" });
+        return;
+      }
+      
+      // Add dummy comments for QOTD
+      let dummyComments: Comment[] = [];
+      if (postId === dailyQuestion?.id && dailyQuestion?.is_spotlight) {
+        dummyComments = [
+          {
+            id: 'dummy-comment-1',
+            post_id: postId,
+            user_id: 'dummy-user-9',
+            username: 'Zara Kim',
+            content: 'Breaking down big assignments into smaller chunks really helps! I also reward myself after completing each section.',
+            created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+            grade: '10th grade',
+            school: 'Valley High'
+          },
+          {
+            id: 'dummy-comment-2',
+            post_id: postId,
+            user_id: 'dummy-user-10',
+            username: 'Noah Anderson',
+            content: 'I find that studying with friends keeps me accountable. We use focus rooms together and it makes a huge difference!',
+            created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+            grade: '11th grade',
+            school: 'Lincoln High School'
+          }
+        ];
+      }
+      
       const allComments = [...(data || []), ...dummyComments].sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
       setComments(allComments);
+    } catch (err) {
+      console.error('Unexpected error loading comments:', err);
+      toast({ title: "Error loading comments", variant: "destructive" });
     }
   };
 
@@ -329,25 +373,72 @@ const Community = () => {
   const addComment = async () => {
     if (!newComment.trim() || !selectedPost || !user) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('name, username, grade, school')
-      .eq('id', user.id)
-      .single();
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('name, username, grade, school')
+        .eq('id', user.id)
+        .single();
 
-    const { error } = await supabase.from('community_comments').insert({
-      post_id: selectedPost.id,
-      user_id: user.id,
-      username: profile?.name || profile?.username || 'Anonymous',
-      grade: profile?.grade || null,
-      school: profile?.school || null,
-      content: newComment
-    });
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        toast({ title: "Error fetching profile", variant: "destructive" });
+        return;
+      }
 
-    if (!error) {
+      const { error } = await supabase.from('community_comments').insert({
+        post_id: selectedPost.id,
+        user_id: user.id,
+        username: profile?.name || profile?.username || 'Anonymous',
+        grade: profile?.grade || null,
+        school: profile?.school || null,
+        content: newComment.trim()
+      });
+
+      if (error) {
+        console.error('Error adding comment:', error);
+        toast({ title: "Error adding comment", variant: "destructive" });
+        return;
+      }
+
       setNewComment("");
       loadComments(selectedPost.id);
       toast({ title: "Comment added!" });
+    } catch (err) {
+      console.error('Unexpected error adding comment:', err);
+      toast({ title: "Error adding comment", variant: "destructive" });
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!user) return;
+
+    // Don't allow deleting dummy comments
+    if (commentId.startsWith('dummy-')) {
+      toast({ title: "Cannot delete sample comments", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('community_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting comment:', error);
+        toast({ title: "Error deleting comment", variant: "destructive" });
+        return;
+      }
+
+      if (selectedPost) {
+        loadComments(selectedPost.id);
+      }
+      toast({ title: "Comment deleted" });
+    } catch (err) {
+      console.error('Unexpected error deleting comment:', err);
+      toast({ title: "Error deleting comment", variant: "destructive" });
     }
   };
 
@@ -413,9 +504,21 @@ const Community = () => {
                 {comments.map(comment => (
                   <div key={comment.id} className="p-4 bg-muted/50 rounded-lg">
                     <div className="flex flex-col gap-1 mb-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6 bg-primary/20" />
-                        <span className="text-sm font-medium">{comment.username}</span>
+                      <div className="flex items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6 bg-primary/20" />
+                          <span className="text-sm font-medium">{comment.username}</span>
+                        </div>
+                        {comment.user_id === user?.id && !comment.id.startsWith('dummy-') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteComment(comment.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground ml-8">
                         {comment.school && <span>{comment.school}</span>}

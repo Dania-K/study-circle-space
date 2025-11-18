@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# StudiCircle Project
 
 ## Project info
 

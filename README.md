@@ -4,7 +4,7 @@
 
 **URL**: https://studicircle.lovable.app
 
-The clock is ticking, the page is blank, and focus feels impossible — a struggle every student knows. That’s why we created StudiCircle, a gamified productivity platform designed to help students manage their time, tasks, and studying with less stress and more consistency. With 86% of high schoolers procrastinating, we know a change was needed, so we took this into our own hands .
+The clock is ticking, the page is blank, and focus feels impossible - a struggle every student knows. That’s why we created StudiCircle, a gamified productivity platform designed to help students manage their time, tasks, and studying with less stress and more consistency. With 86% of high schoolers procrastinating, we know a change was needed, so we took this into our own hands .
 
 StudiCircle combines focus rooms, AI-powered task planning, Pomodoro timers, a supportive community, and customizable dashboards to make studying more engaging. Students can track daily stats, join or create focus rooms, make motivational posts, and use the AI study tool to plan assignments or get homework help. Tasks are neatly organized into daily, upcoming, and completed sections to keep students accountable.
 

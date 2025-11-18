@@ -44,7 +44,7 @@ Gamification — including streaks, XP, levels, themes, and study pets — keeps
 
 ## What’s Next
 
-StudiCircle is off to a great start — but we’re only getting started.
+StudiCircle is off to a great start - but we’re only getting started.
 
 We are working on an AI-powered anti-bullying detector to keep the community positive, safe, and free from harmful interactions.
 

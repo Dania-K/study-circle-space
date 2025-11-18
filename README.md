@@ -4,7 +4,7 @@
 
 **URL**: https://studicircle.lovable.app
 
-The clock is ticking, the page is blank, and focus feels impossible — a struggle every student knows. That’s why we created StudiCircle, a gamified productivity platform designed to help students manage their time, tasks, and studying with less stress and more consistency. With 86% of high schoolers procrastinating, we knew real change was needed.
+The clock is ticking, the page is blank, and focus feels impossible — a struggle every student knows. That’s why we created StudiCircle, a gamified productivity platform designed to help students manage their time, tasks, and studying with less stress and more consistency. With 86% of high schoolers procrastinating, we know a change was needed, so we took this into our own hands .
 
 StudiCircle combines focus rooms, AI-powered task planning, Pomodoro timers, a supportive community, and customizable dashboards to make studying more engaging. Students can track daily stats, join or create focus rooms, make motivational posts, and use the AI study tool to plan assignments or get homework help. Tasks are neatly organized into daily, upcoming, and completed sections to keep students accountable.
 
@@ -18,28 +18,28 @@ Gamification — including streaks, XP, levels, themes, and study pets — keeps
 
 - AI task planner that builds study plans
 
-AI homework helper for deep explanations
+- AI homework helper for deep explanations
 
-Full task dashboard (daily, upcoming, completed)
+- Full task dashboard (daily, upcoming, completed)
 
-Community forum with motivation, study tips, and progress posts
+- Community forum with motivation, study tips, and progress posts
 
-Customizable themes + study pets
+- Customizable themes + study pets
 
-Personalized dashboard showing XP, streak, progress, and stats
+- Personalized dashboard showing XP, streak, progress, and stats
 
 
 ## Tech Used
 
-Lovable
+- Lovable
 
-Supabase
+- Supabase
 
-TypseScript
+- TypseScript
 
-React
+- React
 
-GitHub for version control
+- GitHub for version control
 
 
 ## What’s Next

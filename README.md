@@ -1,4 +1,4 @@
-# StudiCircle Project
+# StudiCircle
 
 ## Project info
 

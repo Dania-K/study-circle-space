@@ -14,21 +14,32 @@ Gamification — including streaks, XP, levels, themes, and study pets — keeps
 ## Features
 
 Gamified XP, streaks, and leveling system
+
 Focus rooms with Pomodoro timers
+
 AI task planner that builds study plans
+
 AI homework helper for deep explanations
+
 Full task dashboard (daily, upcoming, completed)
+
 Community forum with motivation, study tips, and progress posts
+
 Customizable themes + study pets
+
 Personalized dashboard showing XP, streak, progress, and stats
 
 
-## Tech Stack
+## Tech Used
 
 Lovable
+
 Supabase
+
 TypseScript
+
 React
+
 GitHub for version control
 
 

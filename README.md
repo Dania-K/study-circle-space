@@ -39,7 +39,7 @@ Gamification — including streaks, XP, levels, themes, and study pets — keeps
 
 - React
 
-- GitHub for version control
+- GitHub
 
 
 ## What’s Next

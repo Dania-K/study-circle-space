@@ -4,70 +4,21 @@
 
 **URL**: https://studicircle.lovable.app
 
-## How can I edit this code?
+The clock is ticking, the page is blank, and focus feels impossible — a struggle every student knows. That’s why we created StudiCircle, a gamified productivity platform designed to help students manage their time, tasks, and studying with less stress and more consistency. With 86% of high schoolers procrastinating, we knew change was needed.
 
-There are several ways of editing your application.
+StudiCircle brings together focus rooms, AI-powered task planning, Pomodoro timers, a supportive community, and customizable dashboards to make studying more engaging. Students can track daily stats, join or create focus rooms, make motivational posts, and use the AI study tool to plan assignments or get homework help. Tasks are organized by daily, upcoming, and completed, helping students stay accountable.
 
-**Use Lovable**
+Gamification — including streaks, XP, levels, themes, and study pets — keeps students motivated, while community posts build encouragement and connection.
+The unproductive days are over. 
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/52a6c3fa-4782-4986-a03a-ca575bef3eb9) and start prompting.
+StudiCircle is off to a great start — but we’re only getting started.
 
-Changes made via Lovable will be committed automatically to this repo.
+Our next major goal is to develop an AI-powered anti-bullying detector that keeps the community safe, positive, and free from harmful interactions. We want every student to feel supported and encouraged while using StudiCircle.
 
-**Use your preferred IDE**
+We also plan to build an AI focus detector that can recognize whether a student is actually working on the task they set. If they become idle or drift into unrelated activities, StudiCircle will gently notify them to help refocus and stay aligned with their goals.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+As creators, we understand the challenges students face worldwide, and we aim to strengthen and expand StudiCircle so it can reach and positively impact students across the globe.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+StudiCircle makes studying clearer, smarter, and more enjoyable — one step at a time. Study Better, Together.
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/52a6c3fa-4782-4986-a03a-ca575bef3eb9) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+AI Tools Disclosure: We used ChatGPT to generate the base of the website and refined it using Lovable.
